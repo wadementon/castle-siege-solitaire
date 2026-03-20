@@ -44,18 +44,19 @@
   .torch-glow { position:fixed; width:200px; height:200px; border-radius:50%; top:-50px; background:radial-gradient(ellipse,rgba(255,180,50,.12) 0%,transparent 70%); z-index:0; animation:flicker 1.5s infinite alternate; pointer-events:none; }
   .torch-glow-left{left:-60px;} .torch-glow-right{right:-60px;}
 
-  #game { position:relative; z-index:1; max-width:900px; margin:0 auto; padding:20px 15px 40px; min-height:100vh; display:flex; flex-direction:column; gap:14px; }
+  #game { position:relative; z-index:1; max-width:900px; margin:0 auto; padding:12px 15px 20px; min-height:100vh; display:flex; flex-direction:column; gap:8px; }
 
   .game-title { text-align:center; font-family:'Cinzel Decorative',serif; font-size:clamp(1.4rem,4vw,2.2rem); color:var(--gold); text-shadow:0 0 20px rgba(201,168,76,.5),0 2px 4px rgba(0,0,0,.8); letter-spacing:.15em; padding:8px 0 0; }
   .title-divider { text-align:center; color:var(--gold-dim); font-size:.7rem; letter-spacing:.4em; margin-top:2px; }
 
   .top-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .top-row .hp-panel { flex-shrink:0; }
 
-  .hp-panel { background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); border:1px solid var(--gold-dim); border-radius:8px; padding:10px 14px; min-width:160px; position:relative; transition:box-shadow .2s,border-color .2s; min-height:95px; }
+  .hp-panel { background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); border:1px solid var(--gold-dim); border-radius:8px; padding:14px 18px; min-width:190px; position:relative; transition:box-shadow .2s,border-color .2s; min-height:120px; }
   .hp-panel.drop-target::after { content:"DROP TO HEAL"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:.5rem; letter-spacing:.2em; color:var(--gold); background:rgba(201,168,76,.08); border-radius:8px; pointer-events:none; }
   .hp-panel.drop-target { border-color:var(--gold)!important; box-shadow:0 0 16px rgba(201,168,76,.5)!important; }
   .hp-label { font-size:.6rem; letter-spacing:.3em; color:var(--gold-dim); text-transform:uppercase; margin-bottom:4px; }
-  .hp-value { font-family:'Cinzel Decorative',serif; font-size:1.8rem; color:var(--gold-light); line-height:1; text-shadow:0 0 10px rgba(201,168,76,.4); }
+  .hp-value { font-family:'Cinzel Decorative',serif; font-size:2.2rem; color:var(--gold-light); line-height:1; text-shadow:0 0 10px rgba(201,168,76,.4); }
   .hp-value span { font-size:1rem; color:var(--gold-dim); }
   .hp-bar-track { margin-top:6px; height:6px; background:var(--stone-darkest); border-radius:3px; border:1px solid var(--stone-highlight); overflow:hidden; }
   .hp-bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--blood),var(--blood-light)); transition:width .5s ease; box-shadow:0 0 6px rgba(192,57,43,.6); }
@@ -68,7 +69,7 @@
   .castle svg { width:100%; height:100%; filter:drop-shadow(0 0 8px rgba(201,168,76,.3)); }
   .deck-count { font-family:'Cinzel Decorative',serif; font-size:1rem; color:var(--gold); text-align:center; text-shadow:0 0 8px rgba(201,168,76,.5); }
 
-  .section-label { font-size:.75rem; letter-spacing:.25em; color:var(--gold-dim); text-transform:uppercase; text-align:center; }
+  .section-label { font-size:.6rem; letter-spacing:.35em; color:var(--gold-dim); text-transform:uppercase; text-align:center; }
   .room { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
   .card-slot { aspect-ratio:2.5/3.5; border-radius:10px; border:1px dashed var(--stone-highlight); display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.02); min-height:110px; position:relative; }
 
@@ -129,18 +130,18 @@
   .btn-danger:hover:not(:disabled) { border-color:var(--blood-light); background:linear-gradient(135deg,rgba(139,26,26,.3),var(--stone-mid)); color:#ff9090; box-shadow:0 0 10px rgba(192,57,43,.3); }
   .btn-primary { border-color:var(--gold); color:var(--gold-light); }
 
-  .hint-bar { text-align:center; font-family:'IM Fell English',serif; font-style:italic; font-size:.82rem; color:var(--gold-dim); min-height:1.2em; transition:color .2s; }
-  .hint-bar.active { color:var(--parchment-dim); }
+  .hint-bar { display:none; text-align:center; font-family:'IM Fell English',serif; font-style:italic; font-size:.75rem; color:var(--parchment-dim); transition:color .2s; padding:2px 0; }
+  .hint-bar.active { display:block; }
 
-  .log-panel { background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); border:1px solid var(--stone-highlight); border-radius:8px; padding:12px 16px; max-height:130px; overflow-y:auto; }
+  .log-panel { background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); border:1px solid var(--stone-highlight); border-radius:8px; padding:10px 12px; overflow-y:auto; }
   .log-panel::-webkit-scrollbar{width:4px;} .log-panel::-webkit-scrollbar-track{background:var(--stone-dark);} .log-panel::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px;}
-  .log-entry { font-family:'IM Fell English',serif; font-size:clamp(.8rem,2vw,.95rem); color:var(--parchment-dim); padding:3px 0; border-bottom:1px solid rgba(255,255,255,.03); font-style:italic; }
+  .log-entry { font-family:'IM Fell English',serif; font-size:clamp(.65rem,1.8vw,.8rem); color:var(--parchment-dim); padding:2px 0; border-bottom:1px solid rgba(255,255,255,.03); font-style:italic; }
   .log-entry.highlight{color:var(--gold-light);}
   .log-entry.damage{color:#e07070;}
   .log-entry.heal{color:#70c070;}
   .log-entry.system{color:var(--gold-dim);letter-spacing:.1em;font-style:normal;font-family:'Cinzel',serif;font-size:.6rem;}
 
-  .room-info { display:flex; justify-content:center; gap:16px; font-size:.72rem; letter-spacing:.15em; color:var(--gold-dim); text-transform:uppercase; }
+  .room-info { display:flex; justify-content:center; gap:16px; font-size:.55rem; letter-spacing:.2em; color:var(--gold-dim); text-transform:uppercase; }
   .room-info span { color:var(--parchment-dim); }
 
   .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
@@ -173,19 +174,34 @@
 
   <div class="top-row">
     <div class="hp-panel" id="hp-panel">
-      <div class="hp-label">⚔ Vitality</div>
-      <div class="hp-value" id="hp-display">20 <span>/ 20</span></div>
-      <div class="hp-bar-track"><div class="hp-bar-fill" id="hp-bar" style="width:100%"></div></div>
-      <div class="status-tag safe" id="status-tag">Unscathed</div>
-    </div>
-    <div class="action-panel" style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;align-self:stretch;">
-      <div class="action-title">✦ Actions ✦</div>
-      <div class="action-buttons" style="flex-direction:column;">
-        <button class="btn btn-primary" id="btn-deal" onclick="dealRoom()" disabled>Deal Room</button>
-        <button class="btn btn-danger"  id="btn-run"  onclick="runFromRoom()" disabled>Flee the Chamber</button>
-        <button class="btn" id="btn-reshuffle" onclick="startGame()" style="margin-top:4px;border-color:#555;color:#888;font-size:clamp(.45rem,1.2vw,.58rem);">↺ Reshuffle &amp; Start Over</button>
+      <div style="display:flex;gap:10px;align-items:flex-start;">
+        <div style="flex:1;">
+          <div class="hp-label">⚔ Vitality</div>
+          <div class="hp-value" id="hp-display">20 <span>/ 20</span></div>
+          <div class="hp-bar-track"><div class="hp-bar-fill" id="hp-bar" style="width:100%"></div></div>
+          <div class="status-tag safe" id="status-tag">Unscathed</div>
+          <div class="room-info" style="margin-top:8px;flex-direction:column;gap:3px;align-items:flex-start;font-size:.6rem;">
+            <span>Room <span id="room-num">—</span></span>
+            <span>Interacted: <span id="interacted-count">0</span>/3</span>
+            <span>Flee: <span id="can-run-display">Yes</span></span>
+          </div>
+        </div>
+        <div id="hero-portrait" style="width:64px;height:64px;flex-shrink:0;border-radius:6px;border:1px solid var(--gold-dim);background:linear-gradient(135deg,var(--stone-light),var(--stone-dark));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;overflow:hidden;">
+          <div style="font-size:1.4rem;opacity:0.3;">🧙</div>
+          <div style="font-size:0.4rem;letter-spacing:0.15em;color:var(--gold-dim);text-transform:uppercase;">Hero</div>
+          <div style="position:absolute;inset:2px;border-radius:4px;border:1px solid rgba(201,168,76,0.1);pointer-events:none;"></div>
+        </div>
       </div>
     </div>
+    <div class="action-panel" style="width:fit-content;flex-shrink:0;display:flex;flex-direction:column;gap:6px;padding:10px 14px;align-self:flex-start;">
+      <div class="action-title">✦ Actions ✦</div>
+      <div class="action-buttons" style="flex-direction:column;gap:6px;">
+        <button class="btn btn-primary" id="btn-deal" onclick="dealRoom()" disabled>Deal Room</button>
+        <button class="btn btn-danger"  id="btn-run"  onclick="runFromRoom()" disabled>Flee the Chamber</button>
+        <button class="btn" id="btn-reshuffle" onclick="startGame()" style="border-color:#555;color:#888;font-size:clamp(.45rem,1.2vw,.58rem);">↺ Reshuffle &amp; Start Over</button>
+      </div>
+    </div>
+    <div class="log-panel" id="log" style="width:240px;flex-shrink:0;height:144px;overflow-y:auto;"></div>
     <div class="castle-area">
       <div class="castle-label">✦ The Castle ✦</div>
       <div class="castle">
@@ -213,14 +229,10 @@
       </div>
       <div class="deck-count" id="deck-count">46</div>
     </div>
+
   </div>
 
-  <div class="room-info">
-    Room <span id="room-num">—</span> &nbsp;|&nbsp; Interacted: <span id="interacted-count">0</span>/3 &nbsp;|&nbsp; Flee: <span id="can-run-display">Yes</span>
-  </div>
-
-  <div class="hint-bar" id="hint-bar">Drag cards to interact</div>
-
+  <div class="hint-bar" id="hint-bar"></div>
   <div class="section-label">✦ The Chamber ✦</div>
   <div class="room" id="room">
     <div class="card-slot" id="slot-0"></div>
@@ -245,7 +257,6 @@
     </div>
   </div>
 
-  <div class="log-panel" id="log"></div>
 </div>
 
 <!-- Overlays -->
@@ -406,7 +417,7 @@ function startDrag(e,card,source,el){
   if(source.startsWith('room-')){
     const i=+source.split('-')[1];
     if(G.used[i]) return;
-    if(G.interacted>=4){hint('You have already acted on all 4 cards this room.');return;}
+    if(G.interacted>=3){hint('You may only interact with 3 cards per room.');return;}
   }
   e.preventDefault();
   D={active:true,card,source,el};
@@ -589,8 +600,8 @@ function doWeaponFight(card,idx){
   if(!G.weapon){hint('No weapon equipped — drag to Discard to fight bare-handed.');return;}
   const mv=numVal(card), wv=numVal(G.weapon);
   const lastKill=G.weapon.kills.length>0?G.weapon.kills[G.weapon.kills.length-1]:null;
-  const canUse=lastKill===null||mv<=numVal(lastKill);
-  if(!canUse){hint(`Your ${name(G.weapon)} is too weak for this foe. Drag to Discard instead.`);return;}
+  const canUse=lastKill===null||mv<numVal(lastKill);
+  if(!canUse){hint(`Your ${name(G.weapon)} is too dull for this foe. Drag to Discard instead.`);return;}
   const dmg=Math.max(0,mv-wv);
   G.weapon.kills.push(card);
   G.used[idx]=true; G.interacted++;
@@ -611,22 +622,18 @@ function doHeal(card,idx){
 
 function afterAct(){
   renderAll(); updateButtons();
-  // Check win: no enemies left in room OR deck
-  const remCards=G.room.filter((c,i)=>c&&!G.used[i]);
-  const enemiesInRoom=remCards.filter(c=>c.type==='enemy').length;
-  const enemiesInDeck=G.deck.filter(c=>c.type==='enemy').length;
-  if(enemiesInRoom===0&&enemiesInDeck===0&&G.interacted>=3){
-    triggerWin(); return;
-  }
   if(G.interacted>=3){
-    const rem=remCards.length;
-    if(enemiesInRoom>0&&G.deck.length===0){
-      hint('Enemies remain — slay them before claiming the castle!');
-    } else if(rem>0){
-      hint('3 actions done — deal next room or act on the 4th card.');
-    } else {
-      hint('Chamber cleared — advance to the next.');
+    const rem=G.room.filter((c,i)=>c&&!G.used[i]).length;
+    const remCards=G.room.filter((c,i)=>c&&!G.used[i]);
+    const enemiesLeft=remCards.filter(c=>c.type==='enemy').length;
+    if(G.deck.length===0&&rem<=1){
+      if(enemiesLeft>0){
+        hint('A enemy still lurks in the chamber — slay all beasts to claim the castle!');
+        return;
+      }
+      triggerWin(); return;
     }
+    hint('Chamber cleared — advance to the next.');
   }
 }
 
@@ -732,17 +739,17 @@ function renderSlots(){
   pb.innerHTML='';
   if(G.potionBag){
     pb.classList.add('has-card');
-    // Bag card is base, stored potion fans over it (matching weapon slot style)
+    // Bag card peeks behind stored potion
+    const wrapPb=document.createElement('div');
+    wrapPb.style.cssText='position:absolute;inset:0;z-index:1;pointer-events:none;transform:rotate(-8deg) translate(-5px,4px);transform-origin:center bottom;';
     const bagElPb=makeCard({suit:'heart',value:'A',type:'potion-bag'},false,false);
-    bagElPb.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1;';
-    pb.appendChild(bagElPb);
+    bagElPb.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
+    wrapPb.appendChild(bagElPb);
+    pb.appendChild(wrapPb);
     if(G.potionBagItem){
-      const wrapPb=document.createElement('div');
-      wrapPb.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(18px,0) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
       const stored=makeCard(G.potionBagItem,false,false);
-      stored.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
-      wrapPb.appendChild(stored);
-      pb.appendChild(wrapPb);
+      stored.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:10;pointer-events:none;';
+      pb.appendChild(stored);
       const dragEl=makeCard(G.potionBagItem,true,false);
       dragEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:11;opacity:0;cursor:grab;';
       dragEl.addEventListener('mousedown', e=>startDrag(e,G.potionBagItem,'potion-bag-item',dragEl));
@@ -764,17 +771,17 @@ function renderSlots(){
   wb.innerHTML='';
   if(G.weaponBag){
     wb.classList.add('has-card');
-    // Bag card is base, stored weapon fans over it (matching weapon slot style)
+    // Bag card peeks behind stored weapon
+    const wrapWb=document.createElement('div');
+    wrapWb.style.cssText='position:absolute;inset:0;z-index:1;pointer-events:none;transform:rotate(-8deg) translate(-5px,4px);transform-origin:center bottom;';
     const bagElWb=makeCard({suit:'diamond',value:'A',type:'weapon-bag'},false,false);
-    bagElWb.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1;';
-    wb.appendChild(bagElWb);
+    bagElWb.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
+    wrapWb.appendChild(bagElWb);
+    wb.appendChild(wrapWb);
     if(G.weaponBagItem){
-      const wrapWb=document.createElement('div');
-      wrapWb.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(18px,0) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
       const stored=makeCard(G.weaponBagItem,false,false);
-      stored.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
-      wrapWb.appendChild(stored);
-      wb.appendChild(wrapWb);
+      stored.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:10;pointer-events:none;';
+      wb.appendChild(stored);
       const dragEl=makeCard(G.weaponBagItem,true,false);
       dragEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:11;opacity:0;cursor:grab;';
       dragEl.addEventListener('mousedown', e=>startDrag(e,G.weaponBagItem,'weapon-bag-item',dragEl));
@@ -796,22 +803,29 @@ function renderSlots(){
   ws.innerHTML='';
   if(G.weapon){
     ws.classList.add('has-card');
-    // Weapon card is the base
+    // Weapon card peeks from behind on the left
     const kills=G.weapon.kills;
     const el=makeCard(G.weapon,false,false);
     el.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1;';
     ws.appendChild(el);
-    // Show only the lowest-value kill fanned over the weapon
-    if(kills.length>0){
-      const lowestKill=kills.reduce((a,b)=>numVal(a)<=numVal(b)?a:b);
+    // Slain enemies fan out to the right on top, semi-transparent
+    const maxFan=Math.min(kills.length,5);
+    for(let k=0;k<maxFan;k++){
+      const kc=kills[k];
+      // Each card shifts progressively right and rotates slightly
+      const tx=(k+1)*18;
+      const angle=(k+1)*6;
       const wrapper=document.createElement('div');
-      wrapper.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(18px,0) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
-      const kEl=makeCard(lowestKill,false,false);
+      wrapper.style.cssText=`position:absolute;inset:0;z-index:${k+2};pointer-events:none;transform:translate(${tx}px,0) rotate(${angle}deg);transform-origin:center bottom;opacity:0.7;`;
+      const kEl=makeCard(kc,false,false);
       kEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
       wrapper.appendChild(kEl);
       ws.appendChild(wrapper);
+    }
+    if(kills.length>0){
+      const lastKillVal=numVal(kills[kills.length-1]);
       const t=document.createElement('div'); t.className='weapon-degrade';
-      t.textContent='MAX vs. ≤ '+numVal(lowestKill);
+      t.textContent=`MAX vs. < ${lastKillVal}`;
       ws.appendChild(t);
     }
   } else {
