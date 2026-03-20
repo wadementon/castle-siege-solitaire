@@ -103,7 +103,7 @@
 
   .slots-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
   .slot { aspect-ratio:2.5/3.5; border-radius:10px; border:1px solid var(--gold-dim); background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; position:relative; overflow:hidden; min-height:100px; transition:border-color .2s,box-shadow .2s; }
-  #weapon-slot, #potion-bag-slot, #weapon-bag-slot { overflow:visible; }
+  #weapon-slot, #potion-belt-slot, #scabbard-slot { overflow:visible; }
   .slot::before { content:''; position:absolute; inset:3px; border-radius:7px; border:1px solid rgba(201,168,76,.1); pointer-events:none; }
   .slot-icon { font-size:clamp(1.4rem,3.5vw,2rem); opacity:.4; }
   .slot-label { font-size:clamp(.4rem,1vw,.5rem); letter-spacing:.2em; color:var(--gold-dim); text-transform:uppercase; text-align:center; padding:0 4px; }
@@ -242,11 +242,11 @@
 
   <div class="section-label">✦ Your Possessions ✦</div>
   <div class="slots-row">
-    <div class="slot" id="potion-bag-slot">
-      <div class="slot-icon">🧴</div><div class="slot-label">Potion Bag</div>
+    <div class="slot" id="potion-belt-slot">
+      <div class="slot-icon">🧴</div><div class="slot-label">Potion Belt</div>
     </div>
-    <div class="slot" id="weapon-bag-slot">
-      <div class="slot-icon">⚔</div><div class="slot-label">Weapon Bag</div>
+    <div class="slot" id="scabbard-slot">
+      <div class="slot-icon">⚔</div><div class="slot-label">Scabbard</div>
     </div>
     <div class="slot" id="weapon-slot">
       <div class="slot-icon">🗡</div><div class="slot-label">Weapon</div>
@@ -262,7 +262,14 @@
 <div class="overlay active" id="overlay-start">
   <div class="overlay-box">
     <div class="overlay-title">Castle Siege Solitaire</div>
-    <div class="overlay-msg">The castle walls await, Hero.<br>Breach every chamber and slay every enemy.<br><br><strong style="color:var(--gold);font-style:normal;">How to play:</strong><br>Drag cards onto targets to act.<br>Enemies → Weapon slot or Discard.<br>Potions → HP bar to drink.<br>Weapons → Weapon slot to equip.</div>
+    <div class="overlay-msg">The castle walls await, Hero.<br>Breach every chamber and slay every enemy.<br><br><strong style="color:var(--gold);font-style:normal;">How to play:</strong><br>Drag cards onto targets to act.<br>Enemies → Weapon slot or Discard.<br>Potions → HP bar to drink.<br>Weapons → Weapon slot to equip.<br><br><strong style="color:var(--gold);font-style:normal;">Card Types:</strong><br>
+      <span style="font-style:normal;">
+        ♦ = Weapons<br>
+        ♥ = Health Potion<br>
+        A♦ = Scabbard<br>
+        A♥ = Potion Belt<br>
+        ♠ / ♣ = Enemies
+      </span></div>
     <button class="btn btn-primary" onclick="startGame()" style="font-size:.8rem;padding:10px 24px;margin-top:4px;">Enter the Castle</button>
   </div>
 </div>
@@ -300,9 +307,9 @@ function buildDeck(){
   for(const s of ['spade','club'])
     for(const v of ['A',2,3,4,5,6,7,8,9,10,'J','Q','K'])
       d.push({suit:s,value:v,type:'enemy'});
-  d.push({suit:'diamond',value:'A',type:'weapon-bag'});
+  d.push({suit:'diamond',value:'A',type:'scabbard'});
   for(const v of [2,3,4,5,6,7,8,9,10]) d.push({suit:'diamond',value:v,type:'weapon'});
-  d.push({suit:'heart',value:'A',type:'potion-bag'});
+  d.push({suit:'heart',value:'A',type:'potion-belt'});
   for(const v of [2,3,4,5,6,7,8,9,10]) d.push({suit:'heart',value:v,type:'potion'});
   return d;
 }
@@ -323,8 +330,8 @@ function emoji(c){
   }
   if(c.type==='weapon') return ['','🗡','🗡','🗡','⚔','⚔','🪃','🏹','⚔','🪖','✨'][v]||'⚔';
   if(c.type==='potion') return v<=3?'💧':v<=5?'🧪':v<=7?'⚗':'🍶';
-  if(c.type==='potion-bag') return '🧴';
-  if(c.type==='weapon-bag') return '⚔';
+  if(c.type==='potion-belt') return '🧴';
+  if(c.type==='scabbard') return '⚔';
   return '?';
 }
 
@@ -336,8 +343,8 @@ function name(c){
   }
   if(c.type==='weapon') return ({2:'Rusty Dagger',3:'Iron Knife',4:'Short Sword',5:'Longsword',6:'War Axe',7:'Claymore',8:'Enchanted Blade',9:'Runesword',10:'Excalibur'})[v]||'Weapon';
   if(c.type==='potion') return ({2:'Dram of Mending',3:'Healing Vial',4:'Restorative',5:'Elixir',6:'Draught of Vigor',7:'Tonic of Life',8:'Grand Elixir',9:'Potion of Vitality',10:'Blessed Brew'})[v]||'Potion';
-  if(c.type==='potion-bag') return 'Potion Belt';
-  if(c.type==='weapon-bag') return 'Sword Scabbard';
+  if(c.type==='potion-belt') return 'Potion Belt';
+  if(c.type==='scabbard') return 'Scabbard';
   return '';
 }
 
@@ -368,8 +375,8 @@ function fresh(){
     discard:[],
     hp:20, maxHp:20,
     weapon:null,
-    weaponBag:false, potionBag:false,
-    weaponBagItem:null, potionBagItem:null,
+    scabbard:false, potionBelt:false,
+    scabbardItem:null, potionBeltItem:null,
     healedThisRoom:false,
     ranLastRoom:false,
     roomNumber:0,
@@ -387,8 +394,8 @@ const ghost=document.getElementById('drag-ghost');
 // Valid drop targets for a given card+source
 function validTargets(card,source){
   const t=card.type;
-  if(source==='potion-bag-item') return ['hp-panel'];
-  if(source==='weapon-bag-item') return ['weapon-slot'];
+  if(source==='potion-belt-item') return ['hp-panel'];
+  if(source==='scabbard-item') return ['weapon-slot'];
 
   // from room
   const out=[];
@@ -399,15 +406,15 @@ function validTargets(card,source){
   if(t==='weapon'){
     out.push('weapon-slot');
     out.push('discard-slot');
-    if(G.weaponBag && !G.weaponBagItem) out.push('weapon-bag-slot');
+    if(G.scabbard) out.push('scabbard-slot');
   }
   if(t==='potion'){
     out.push('hp-panel');
     out.push('discard-slot');
-    if(G.potionBag && !G.potionBagItem) out.push('potion-bag-slot');
+    if(G.potionBelt) out.push('potion-belt-slot');
   }
-  if(t==='potion-bag') out.push('potion-bag-slot','discard-slot');
-  if(t==='weapon-bag') out.push('weapon-bag-slot','discard-slot');
+  if(t==='potion-belt') out.push('potion-belt-slot','discard-slot');
+  if(t==='scabbard') out.push('scabbard-slot','discard-slot');
   return out;
 }
 
@@ -432,7 +439,7 @@ function startDrag(e,card,source,el){
 
   // Highlight valid targets
   const vt=validTargets(card,source);
-  ['hp-panel','weapon-slot','discard-slot','potion-bag-slot','weapon-bag-slot'].forEach(id=>{
+  ['hp-panel','weapon-slot','discard-slot','potion-belt-slot','scabbard-slot'].forEach(id=>{
     const el2=document.getElementById(id);
     if(el2) el2.classList.toggle('drop-target',vt.includes(id));
   });
@@ -461,7 +468,7 @@ function onUp(e){
   D.el.classList.remove('dragging');
 
   // Clear highlights
-  ['hp-panel','weapon-slot','discard-slot','potion-bag-slot','weapon-bag-slot'].forEach(id=>{
+  ['hp-panel','weapon-slot','discard-slot','potion-belt-slot','scabbard-slot'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.classList.remove('drop-target');
   });
@@ -477,7 +484,7 @@ function onUp(e){
 }
 
 function hitTest(x,y){
-  for(const id of ['hp-panel','weapon-slot','discard-slot','potion-bag-slot','weapon-bag-slot']){
+  for(const id of ['hp-panel','weapon-slot','discard-slot','potion-belt-slot','scabbard-slot']){
     const el=document.getElementById(id);
     if(!el) continue;
     const r=el.getBoundingClientRect();
@@ -494,17 +501,17 @@ function handleDrop(card,source,targetId){
   if(!vt.includes(targetId)){hint('You cannot do that.');return false;}
 
   // From bags
-  if(source==='potion-bag-item'){
+  if(source==='potion-belt-item'){
     if(G.healedThisRoom){hint('You can only heal once per room.');return false;}
     const h=numVal(card); const actual=Math.min(h,G.maxHp-G.hp);
     G.hp=Math.min(G.maxHp,G.hp+h); G.healedThisRoom=true;
-    G.potionBagItem=null; G.discard.push(card);
+    G.potionBeltItem=null; G.discard.push(card);
     log(`You drink the ${name(card)} from your belt, restoring ${actual} vitality.`,'heal');
     flashHeal(); renderAll(); updateButtons(); return true;
   }
-  if(source==='weapon-bag-item'){
+  if(source==='scabbard-item'){
     const old=G.weapon; G.weapon={...card,kills:[]};
-    G.weaponBagItem=null;
+    G.scabbardItem=null;
     if(old) G.discard.push(old);
     log(`You draw the ${name(card)} from your scabbard.`,'highlight');
     renderAll(); updateButtons(); return true;
@@ -550,31 +557,38 @@ function handleDrop(card,source,targetId){
     doHeal(card,idx); return true;
   }
 
-  if(targetId==='potion-bag-slot'){
-    if(card.type==='potion-bag'){
-      G.potionBag=true; G.used[idx]=true; G.interacted++;
+  if(targetId==='potion-belt-slot'){
+    if(card.type==='potion-belt'){
+      G.potionBelt=true; G.used[idx]=true; G.interacted++;
       log(`You secure the Potion Belt around your waist.`,'highlight');
       afterAct(); return true;
     }
     if(card.type==='potion'){
-      if(!G.potionBag){hint('You need a Potion Belt first.');return false;}
-      if(G.potionBagItem){hint('Your belt already holds a potion.');return false;}
-      G.potionBagItem=card; G.used[idx]=true; G.interacted++;
+      if(!G.potionBelt){hint('You need a Potion Belt first.');return false;}
+      if(G.potionBeltItem){
+        G.discard.push(G.potionBeltItem);
+        G.potionBeltItem=null;
+      }
+      G.potionBeltItem=card; G.used[idx]=true; G.interacted++;
       log(`You store the ${name(card)} in your belt.`,'highlight');
       afterAct(); return true;
     }
   }
 
-  if(targetId==='weapon-bag-slot'){
-    if(card.type==='weapon-bag'){
-      G.weaponBag=true; G.used[idx]=true; G.interacted++;
-      log(`You strap the Sword Scabbard to your back.`,'highlight');
+  if(targetId==='scabbard-slot'){
+    if(card.type==='scabbard'){
+      G.scabbard=true; G.used[idx]=true; G.interacted++;
+      log(`You strap the Scabbard to your back.`,'highlight');
       afterAct(); return true;
     }
     if(card.type==='weapon'){
-      if(!G.weaponBag){hint('You need a Sword Scabbard first.');return false;}
-      if(G.weaponBagItem){hint('Your scabbard already holds a weapon.');return false;}
-      G.weaponBagItem=card; G.used[idx]=true; G.interacted++;
+      if(!G.scabbard){hint('You need a Scabbard first.');return false;}
+      if(G.scabbardItem){
+        // Swap: discard current bag item, store new one
+        G.discard.push(G.scabbardItem);
+        G.scabbardItem=null;
+      }
+      G.scabbardItem=card; G.used[idx]=true; G.interacted++;
       log(`You store the ${name(card)} in your scabbard.`,'highlight');
       afterAct(); return true;
     }
@@ -733,27 +747,27 @@ function renderRoom(){
 }
 
 function renderSlots(){
-  // Potion bag
-  const pb=document.getElementById('potion-bag-slot');
+  // Potion belt
+  const pb=document.getElementById('potion-belt-slot');
   pb.innerHTML='';
-  if(G.potionBag){
+  if(G.potionBelt){
     pb.classList.add('has-card');
     // Bag card sits flush in slot
-    const bagElPb=makeCard({suit:'heart',value:'A',type:'potion-bag'},false,false);
+    const bagElPb=makeCard({suit:'heart',value:'A',type:'potion-belt'},false,false);
     bagElPb.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1;';
     pb.appendChild(bagElPb);
-    if(G.potionBagItem){
+    if(G.potionBeltItem){
       // Stored potion fans over the bag card
       const wrapPb=document.createElement('div');
       wrapPb.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(-10px,55px) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
-      const storedPb=makeCard(G.potionBagItem,false,false);
+      const storedPb=makeCard(G.potionBeltItem,false,false);
       storedPb.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
       wrapPb.appendChild(storedPb);
       pb.appendChild(wrapPb);
-      const dragElPb=makeCard(G.potionBagItem,true,false);
+      const dragElPb=makeCard(G.potionBeltItem,true,false);
       dragElPb.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:11;opacity:0;cursor:grab;';
-      dragElPb.addEventListener('mousedown', e=>startDrag(e,G.potionBagItem,'potion-bag-item',dragElPb));
-      dragElPb.addEventListener('touchstart',e=>startDrag(e,G.potionBagItem,'potion-bag-item',dragElPb),{passive:false});
+      dragElPb.addEventListener('mousedown', e=>startDrag(e,G.potionBeltItem,'potion-belt-item',dragElPb));
+      dragElPb.addEventListener('touchstart',e=>startDrag(e,G.potionBeltItem,'potion-belt-item',dragElPb),{passive:false});
       pb.appendChild(dragElPb);
       const t=document.createElement('div'); t.className='bag-tag'; t.textContent='DRAG TO HP';
       pb.appendChild(t);
@@ -763,30 +777,30 @@ function renderSlots(){
     }
   } else {
     pb.classList.remove('has-card');
-    pb.innerHTML='<div class="slot-icon">🧴</div><div class="slot-label">Potion Bag</div>';
+    pb.innerHTML='<div class="slot-icon">🧴</div><div class="slot-label">Potion Belt</div>';
   }
 
   // Weapon bag
-  const wb=document.getElementById('weapon-bag-slot');
+  const wb=document.getElementById('scabbard-slot');
   wb.innerHTML='';
-  if(G.weaponBag){
+  if(G.scabbard){
     wb.classList.add('has-card');
     // Bag card sits flush in slot
-    const bagElWb=makeCard({suit:'diamond',value:'A',type:'weapon-bag'},false,false);
+    const bagElWb=makeCard({suit:'diamond',value:'A',type:'scabbard'},false,false);
     bagElWb.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1;';
     wb.appendChild(bagElWb);
-    if(G.weaponBagItem){
+    if(G.scabbardItem){
       // Stored weapon fans over the bag card
       const wrapWb=document.createElement('div');
       wrapWb.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(-10px,55px) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
-      const storedWb=makeCard(G.weaponBagItem,false,false);
+      const storedWb=makeCard(G.scabbardItem,false,false);
       storedWb.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
       wrapWb.appendChild(storedWb);
       wb.appendChild(wrapWb);
-      const dragElWb=makeCard(G.weaponBagItem,true,false);
+      const dragElWb=makeCard(G.scabbardItem,true,false);
       dragElWb.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:11;opacity:0;cursor:grab;';
-      dragElWb.addEventListener('mousedown', e=>startDrag(e,G.weaponBagItem,'weapon-bag-item',dragElWb));
-      dragElWb.addEventListener('touchstart',e=>startDrag(e,G.weaponBagItem,'weapon-bag-item',dragElWb),{passive:false});
+      dragElWb.addEventListener('mousedown', e=>startDrag(e,G.scabbardItem,'scabbard-item',dragElWb));
+      dragElWb.addEventListener('touchstart',e=>startDrag(e,G.scabbardItem,'scabbard-item',dragElWb),{passive:false});
       wb.appendChild(dragElWb);
       const t=document.createElement('div'); t.className='bag-tag'; t.textContent='DRAG TO WEAPON';
       wb.appendChild(t);
@@ -796,7 +810,7 @@ function renderSlots(){
     }
   } else {
     wb.classList.remove('has-card');
-    wb.innerHTML='<div class="slot-icon">⚔</div><div class="slot-label">Weapon Bag</div>';
+    wb.innerHTML='<div class="slot-icon">⚔</div><div class="slot-label">Scabbard</div>';
   }
 
   // Weapon slot
