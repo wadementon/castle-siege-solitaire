@@ -599,7 +599,7 @@ function doWeaponFight(card,idx){
   if(!G.weapon){hint('No weapon equipped — drag to Discard to fight bare-handed.');return;}
   const mv=numVal(card), wv=numVal(G.weapon);
   const lastKill=G.weapon.kills.length>0?G.weapon.kills[G.weapon.kills.length-1]:null;
-  const canUse=lastKill===null||mv<numVal(lastKill);
+  const canUse=lastKill===null||mv<=numVal(lastKill);
   if(!canUse){hint(`Your ${name(G.weapon)} is too dull for this foe. Drag to Discard instead.`);return;}
   const dmg=Math.max(0,mv-wv);
   G.weapon.kills.push(card);
