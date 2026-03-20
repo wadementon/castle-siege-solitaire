@@ -68,7 +68,7 @@
   .castle svg { width:100%; height:100%; filter:drop-shadow(0 0 8px rgba(201,168,76,.3)); }
   .deck-count { font-family:'Cinzel Decorative',serif; font-size:1rem; color:var(--gold); text-align:center; text-shadow:0 0 8px rgba(201,168,76,.5); }
 
-  .section-label { font-size:.6rem; letter-spacing:.35em; color:var(--gold-dim); text-transform:uppercase; text-align:center; }
+  .section-label { font-size:.75rem; letter-spacing:.25em; color:var(--gold-dim); text-transform:uppercase; text-align:center; }
   .room { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
   .card-slot { aspect-ratio:2.5/3.5; border-radius:10px; border:1px dashed var(--stone-highlight); display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.02); min-height:110px; position:relative; }
 
@@ -129,18 +129,18 @@
   .btn-danger:hover:not(:disabled) { border-color:var(--blood-light); background:linear-gradient(135deg,rgba(139,26,26,.3),var(--stone-mid)); color:#ff9090; box-shadow:0 0 10px rgba(192,57,43,.3); }
   .btn-primary { border-color:var(--gold); color:var(--gold-light); }
 
-  .hint-bar { text-align:center; font-family:'IM Fell English',serif; font-style:italic; font-size:.68rem; color:var(--gold-dim); min-height:1.2em; transition:color .2s; }
+  .hint-bar { text-align:center; font-family:'IM Fell English',serif; font-style:italic; font-size:.82rem; color:var(--gold-dim); min-height:1.2em; transition:color .2s; }
   .hint-bar.active { color:var(--parchment-dim); }
 
-  .log-panel { background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); border:1px solid var(--stone-highlight); border-radius:8px; padding:10px 12px; max-height:90px; overflow-y:auto; }
+  .log-panel { background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); border:1px solid var(--stone-highlight); border-radius:8px; padding:12px 16px; max-height:130px; overflow-y:auto; }
   .log-panel::-webkit-scrollbar{width:4px;} .log-panel::-webkit-scrollbar-track{background:var(--stone-dark);} .log-panel::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px;}
-  .log-entry { font-family:'IM Fell English',serif; font-size:clamp(.65rem,1.8vw,.8rem); color:var(--parchment-dim); padding:2px 0; border-bottom:1px solid rgba(255,255,255,.03); font-style:italic; }
+  .log-entry { font-family:'IM Fell English',serif; font-size:clamp(.8rem,2vw,.95rem); color:var(--parchment-dim); padding:3px 0; border-bottom:1px solid rgba(255,255,255,.03); font-style:italic; }
   .log-entry.highlight{color:var(--gold-light);}
   .log-entry.damage{color:#e07070;}
   .log-entry.heal{color:#70c070;}
   .log-entry.system{color:var(--gold-dim);letter-spacing:.1em;font-style:normal;font-family:'Cinzel',serif;font-size:.6rem;}
 
-  .room-info { display:flex; justify-content:center; gap:16px; font-size:.55rem; letter-spacing:.2em; color:var(--gold-dim); text-transform:uppercase; }
+  .room-info { display:flex; justify-content:center; gap:16px; font-size:.72rem; letter-spacing:.15em; color:var(--gold-dim); text-transform:uppercase; }
   .room-info span { color:var(--parchment-dim); }
 
   .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
@@ -406,7 +406,7 @@ function startDrag(e,card,source,el){
   if(source.startsWith('room-')){
     const i=+source.split('-')[1];
     if(G.used[i]) return;
-    if(G.interacted>=3){hint('You may only interact with 3 cards per room.');return;}
+    if(G.interacted>=4){hint('You have already acted on all 4 cards this room.');return;}
   }
   e.preventDefault();
   D={active:true,card,source,el};
@@ -589,8 +589,8 @@ function doWeaponFight(card,idx){
   if(!G.weapon){hint('No weapon equipped — drag to Discard to fight bare-handed.');return;}
   const mv=numVal(card), wv=numVal(G.weapon);
   const lastKill=G.weapon.kills.length>0?G.weapon.kills[G.weapon.kills.length-1]:null;
-  const canUse=lastKill===null||mv<numVal(lastKill);
-  if(!canUse){hint(`Your ${name(G.weapon)} is too dull for this foe. Drag to Discard instead.`);return;}
+  const canUse=lastKill===null||mv<=numVal(lastKill);
+  if(!canUse){hint(`Your ${name(G.weapon)} is too weak for this foe. Drag to Discard instead.`);return;}
   const dmg=Math.max(0,mv-wv);
   G.weapon.kills.push(card);
   G.used[idx]=true; G.interacted++;
@@ -611,18 +611,17 @@ function doHeal(card,idx){
 
 function afterAct(){
   renderAll(); updateButtons();
-  const rem=G.room.filter((c,i)=>c&&!G.used[i]).length;
-  const remCards=G.room.filter((c,i)=>c&&!G.used[i]);
-  const enemiesLeft=remCards.filter(c=>c.type==='enemy').length;
-  if(G.deck.length===0){
-    if(enemiesLeft===0&&G.interacted>=3){ triggerWin(); return; }
-    if(enemiesLeft===1&&G.interacted===3){
-      hint('One enemy remains — slay it to claim the castle!');
-      return;
-    }
-    if(enemiesLeft===0&&G.interacted>=4){ triggerWin(); return; }
-  }
   if(G.interacted>=3){
+    const rem=G.room.filter((c,i)=>c&&!G.used[i]).length;
+    const remCards=G.room.filter((c,i)=>c&&!G.used[i]);
+    const enemiesLeft=remCards.filter(c=>c.type==='enemy').length;
+    if(G.deck.length===0&&rem<=1){
+      if(enemiesLeft>0){
+        hint('A enemy still lurks in the chamber — slay all beasts to claim the castle!');
+        return;
+      }
+      triggerWin(); return;
+    }
     hint('Chamber cleared — advance to the next.');
   }
 }
@@ -729,17 +728,17 @@ function renderSlots(){
   pb.innerHTML='';
   if(G.potionBag){
     pb.classList.add('has-card');
-    // Bag card peeks behind stored potion
-    const wrapPb=document.createElement('div');
-    wrapPb.style.cssText='position:absolute;inset:0;z-index:1;pointer-events:none;transform:rotate(-8deg) translate(-5px,4px);transform-origin:center bottom;';
+    // Bag card is base, stored potion fans over it (matching weapon slot style)
     const bagElPb=makeCard({suit:'heart',value:'A',type:'potion-bag'},false,false);
-    bagElPb.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
-    wrapPb.appendChild(bagElPb);
-    pb.appendChild(wrapPb);
+    bagElPb.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1;';
+    pb.appendChild(bagElPb);
     if(G.potionBagItem){
+      const wrapPb=document.createElement('div');
+      wrapPb.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(18px,0) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
       const stored=makeCard(G.potionBagItem,false,false);
-      stored.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:10;pointer-events:none;';
-      pb.appendChild(stored);
+      stored.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
+      wrapPb.appendChild(stored);
+      pb.appendChild(wrapPb);
       const dragEl=makeCard(G.potionBagItem,true,false);
       dragEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:11;opacity:0;cursor:grab;';
       dragEl.addEventListener('mousedown', e=>startDrag(e,G.potionBagItem,'potion-bag-item',dragEl));
@@ -761,17 +760,17 @@ function renderSlots(){
   wb.innerHTML='';
   if(G.weaponBag){
     wb.classList.add('has-card');
-    // Bag card peeks behind stored weapon
-    const wrapWb=document.createElement('div');
-    wrapWb.style.cssText='position:absolute;inset:0;z-index:1;pointer-events:none;transform:rotate(-8deg) translate(-5px,4px);transform-origin:center bottom;';
+    // Bag card is base, stored weapon fans over it (matching weapon slot style)
     const bagElWb=makeCard({suit:'diamond',value:'A',type:'weapon-bag'},false,false);
-    bagElWb.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
-    wrapWb.appendChild(bagElWb);
-    wb.appendChild(wrapWb);
+    bagElWb.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1;';
+    wb.appendChild(bagElWb);
     if(G.weaponBagItem){
+      const wrapWb=document.createElement('div');
+      wrapWb.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(18px,0) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
       const stored=makeCard(G.weaponBagItem,false,false);
-      stored.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:10;pointer-events:none;';
-      wb.appendChild(stored);
+      stored.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
+      wrapWb.appendChild(stored);
+      wb.appendChild(wrapWb);
       const dragEl=makeCard(G.weaponBagItem,true,false);
       dragEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:11;opacity:0;cursor:grab;';
       dragEl.addEventListener('mousedown', e=>startDrag(e,G.weaponBagItem,'weapon-bag-item',dragEl));
@@ -793,29 +792,22 @@ function renderSlots(){
   ws.innerHTML='';
   if(G.weapon){
     ws.classList.add('has-card');
-    // Weapon card peeks from behind on the left
+    // Weapon card is the base
     const kills=G.weapon.kills;
     const el=makeCard(G.weapon,false,false);
     el.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1;';
     ws.appendChild(el);
-    // Slain enemies fan out to the right on top, semi-transparent
-    const maxFan=Math.min(kills.length,5);
-    for(let k=0;k<maxFan;k++){
-      const kc=kills[k];
-      // Each card shifts progressively right and rotates slightly
-      const tx=(k+1)*18;
-      const angle=(k+1)*6;
+    // Show only the lowest-value kill fanned over the weapon
+    if(kills.length>0){
+      const lowestKill=kills.reduce((a,b)=>numVal(a)<=numVal(b)?a:b);
       const wrapper=document.createElement('div');
-      wrapper.style.cssText=`position:absolute;inset:0;z-index:${k+2};pointer-events:none;transform:translate(${tx}px,0) rotate(${angle}deg);transform-origin:center bottom;opacity:0.7;`;
-      const kEl=makeCard(kc,false,false);
+      wrapper.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(18px,0) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
+      const kEl=makeCard(lowestKill,false,false);
       kEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
       wrapper.appendChild(kEl);
       ws.appendChild(wrapper);
-    }
-    if(kills.length>0){
-      const lastKillVal=numVal(kills[kills.length-1]);
       const t=document.createElement('div'); t.className='weapon-degrade';
-      t.textContent=`MAX vs. < ${lastKillVal}`;
+      t.textContent='MAX vs. ≤ '+numVal(lowestKill);
       ws.appendChild(t);
     }
   } else {
