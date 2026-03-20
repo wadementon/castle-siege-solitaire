@@ -611,17 +611,18 @@ function doHeal(card,idx){
 
 function afterAct(){
   renderAll(); updateButtons();
-  if(G.interacted>=3){
-    const rem=G.room.filter((c,i)=>c&&!G.used[i]).length;
-    const remCards=G.room.filter((c,i)=>c&&!G.used[i]);
-    const enemiesLeft=remCards.filter(c=>c.type==='enemy').length;
-    if(G.deck.length===0&&rem<=1){
-      if(enemiesLeft>0){
-        hint('A enemy still lurks in the chamber — slay all beasts to claim the castle!');
-        return;
-      }
-      triggerWin(); return;
+  const rem=G.room.filter((c,i)=>c&&!G.used[i]).length;
+  const remCards=G.room.filter((c,i)=>c&&!G.used[i]);
+  const enemiesLeft=remCards.filter(c=>c.type==='enemy').length;
+  if(G.deck.length===0){
+    if(enemiesLeft===0&&G.interacted>=3){ triggerWin(); return; }
+    if(enemiesLeft===1&&G.interacted===3){
+      hint('One enemy remains — slay it to claim the castle!');
+      return;
     }
+    if(enemiesLeft===0&&G.interacted>=4){ triggerWin(); return; }
+  }
+  if(G.interacted>=3){
     hint('Chamber cleared — advance to the next.');
   }
 }
