@@ -745,7 +745,7 @@ function renderSlots(){
     if(G.potionBagItem){
       // Stored potion fans over the bag card
       const wrapPb=document.createElement('div');
-      wrapPb.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(18px,0) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
+      wrapPb.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(-10px,55px) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
       const storedPb=makeCard(G.potionBagItem,false,false);
       storedPb.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
       wrapPb.appendChild(storedPb);
@@ -778,7 +778,7 @@ function renderSlots(){
     if(G.weaponBagItem){
       // Stored weapon fans over the bag card
       const wrapWb=document.createElement('div');
-      wrapWb.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(18px,0) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
+      wrapWb.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(-10px,55px) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
       const storedWb=makeCard(G.weaponBagItem,false,false);
       storedWb.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
       wrapWb.appendChild(storedWb);
@@ -813,7 +813,7 @@ function renderSlots(){
     if(kills.length>0){
       const lowestKill=kills.reduce((a,b)=>numVal(a)<=numVal(b)?a:b);
       const wrapper=document.createElement('div');
-      wrapper.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(18px,0) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
+      wrapper.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transform:translate(-10px,55px) rotate(8deg);transform-origin:center bottom;opacity:0.72;';
       const kEl=makeCard(lowestKill,false,false);
       kEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
       wrapper.appendChild(kEl);
