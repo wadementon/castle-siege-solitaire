@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Castle Siege Solitaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --stone-darkest: #0a0a0f;
+    --stone-dark: #12111a;
+    --stone-mid: #1e1c2a;
+    --stone-light: #2a2838;
+    --stone-highlight: #3a3850;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --gold-dim: #7a6230;
+    --blood: #8b1a1a;
+    --blood-light: #c0392b;
+    --parchment: #e8dfc0;
+    --parchment-dim: #a89870;
+    --card-shadow: rgba(0,0,0,0.8);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background-color: var(--stone-darkest);
+    background-image:
+      repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.01) 2px,rgba(255,255,255,0.01) 4px),
+      repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(255,255,255,0.01) 2px,rgba(255,255,255,0.01) 4px),
+      radial-gradient(ellipse at 20% 50%,rgba(201,168,76,0.04) 0%,transparent 60%),
+      radial-gradient(ellipse at 80% 50%,rgba(139,26,26,0.04) 0%,transparent 60%);
+    min-height:100vh; font-family:'Cinzel',serif; color:var(--parchment); overflow-x:hidden;
+  }
+  .torch { position:fixed; width:6px; height:60px; background:linear-gradient(to top,#8b4513,#c9a84c); border-radius:3px; top:20px; z-index:0; }
+  .torch::after { content:''; position:absolute; top:-20px; left:-8px; width:22px; height:30px; background:radial-gradient(ellipse,#ffcc44 0%,#ff6600 40%,transparent 70%); border-radius:50% 50% 30% 30%; animation:flicker 1.5s infinite alternate; }
+  .torch-left{left:30px;} .torch-right{right:30px;}
+  @keyframes flicker {
+    0%  {transform:scaleX(1)   scaleY(1);   opacity:0.9;}
+    25% {transform:scaleX(.85) scaleY(1.1); opacity:1;}
+    50% {transform:scaleX(1.1) scaleY(.9);  opacity:.85;}
+    75% {transform:scaleX(.9)  scaleY(1.05);opacity:.95;}
+    100%{transform:scaleX(1.05)scaleY(.95); opacity:.88;}
+  }
+  .torch-glow { position:fixed; width:200px; height:200px; border-radius:50%; top:-50px; background:radial-gradient(ellipse,rgba(255,180,50,.12) 0%,transparent 70%); z-index:0; animation:flicker 1.5s infinite alternate; pointer-events:none; }
+  .torch-glow-left{left:-60px;} .torch-glow-right{right:-60px;}
+
+  #game { position:relative; z-index:1; max-width:900px; margin:0 auto; padding:20px 15px 40px; min-height:100vh; display:flex; flex-direction:column; gap:14px; }
+
+  .game-title { text-align:center; font-family:'Cinzel Decorative',serif; font-size:clamp(1.4rem,4vw,2.2rem); color:var(--gold); text-shadow:0 0 20px rgba(201,168,76,.5),0 2px 4px rgba(0,0,0,.8); letter-spacing:.15em; padding:8px 0 0; }
+  .title-divider { text-align:center; color:var(--gold-dim); font-size:.7rem; letter-spacing:.4em; margin-top:2px; }
+
+  .top-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+
+  .hp-panel { background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); border:1px solid var(--gold-dim); border-radius:8px; padding:10px 14px; min-width:160px; position:relative; transition:box-shadow .2s,border-color .2s; min-height:95px; }
+  .hp-panel.drop-target::after { content:"DROP TO HEAL"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:.5rem; letter-spacing:.2em; color:var(--gold); background:rgba(201,168,76,.08); border-radius:8px; pointer-events:none; }
+  .hp-panel.drop-target { border-color:var(--gold)!important; box-shadow:0 0 16px rgba(201,168,76,.5)!important; }
+  .hp-label { font-size:.6rem; letter-spacing:.3em; color:var(--gold-dim); text-transform:uppercase; margin-bottom:4px; }
+  .hp-value { font-family:'Cinzel Decorative',serif; font-size:1.8rem; color:var(--gold-light); line-height:1; text-shadow:0 0 10px rgba(201,168,76,.4); }
+  .hp-value span { font-size:1rem; color:var(--gold-dim); }
+  .hp-bar-track { margin-top:6px; height:6px; background:var(--stone-darkest); border-radius:3px; border:1px solid var(--stone-highlight); overflow:hidden; }
+  .hp-bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--blood),var(--blood-light)); transition:width .5s ease; box-shadow:0 0 6px rgba(192,57,43,.6); }
+  .status-tag { display:inline-block; margin-top:6px; font-size:.55rem; letter-spacing:.2em; padding:2px 6px; border-radius:2px; background:rgba(139,26,26,.3); border:1px solid var(--blood); color:#e07070; }
+  .status-tag.safe { background:rgba(26,80,26,.3); border-color:#2a7a2a; color:#70c070; }
+
+  .castle-area { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .castle-label { font-size:.55rem; letter-spacing:.3em; color:var(--gold-dim); text-transform:uppercase; }
+  .castle { width:80px; height:100px; }
+  .castle svg { width:100%; height:100%; filter:drop-shadow(0 0 8px rgba(201,168,76,.3)); }
+  .deck-count { font-family:'Cinzel Decorative',serif; font-size:1rem; color:var(--gold); text-align:center; text-shadow:0 0 8px rgba(201,168,76,.5); }
+
+  .section-label { font-size:.6rem; letter-spacing:.35em; color:var(--gold-dim); text-transform:uppercase; text-align:center; }
+  .room { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .card-slot { aspect-ratio:2.5/3.5; border-radius:10px; border:1px dashed var(--stone-highlight); display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.02); min-height:110px; position:relative; }
+
+  .card { width:100%; height:100%; border-radius:10px; position:relative; cursor:grab; transition:transform .15s ease,box-shadow .15s ease; transform-origin:bottom center; animation:dealCard .3s ease-out; user-select:none; -webkit-user-select:none; }
+  .card:active { cursor:grabbing; }
+  .card.card-used { opacity:.3; cursor:not-allowed; pointer-events:none; filter:grayscale(.5); }
+  .card:hover:not(.card-used) { transform:translateY(-6px) scale(1.03); box-shadow:0 16px 30px rgba(0,0,0,.7),0 0 15px rgba(201,168,76,.2); z-index:10; }
+  .card.dragging { opacity:.3; transform:scale(.97); }
+  @keyframes dealCard { from{transform:translateY(-20px) scale(.95);opacity:0;} to{transform:translateY(0) scale(1);opacity:1;} }
+  @keyframes snapBack { 0%{transform:scale(1.05);}50%{transform:scale(.97);}100%{transform:scale(1);} }
+  .card.snap-back { animation:snapBack .3s ease-out; }
+
+  .card-inner { width:100%; height:100%; border-radius:10px; background:#f5f0e0; border:1px solid rgba(201,168,76,.4); box-shadow:0 4px 12px var(--card-shadow),inset 0 1px 0 rgba(255,255,255,.5); display:flex; flex-direction:column; overflow:hidden; position:relative; }
+  .card-inner::before { content:''; position:absolute; inset:3px; border-radius:7px; border:1px solid rgba(201,168,76,.25); pointer-events:none; z-index:1; }
+  .card-corner { position:absolute; display:flex; flex-direction:column; align-items:center; line-height:1; z-index:2; padding:4px; }
+  .card-corner.tl{top:4px;left:5px;} .card-corner.br{bottom:4px;right:5px;transform:rotate(180deg);}
+  .card-corner .val { font-family:'Cinzel',serif; font-size:clamp(.65rem,1.8vw,.85rem); font-weight:700; line-height:1; }
+  .card-corner .suit-sm { font-size:clamp(.55rem,1.5vw,.7rem); line-height:1; }
+  .card-art { flex:1; display:flex; align-items:center; justify-content:center; font-size:clamp(1.8rem,5vw,2.8rem); position:relative; overflow:hidden; }
+  .card-art::before { content:''; position:absolute; width:70%; height:65%; border-radius:50%; border:1px solid rgba(201,168,76,.3); background:rgba(201,168,76,.05); }
+  .card-name { font-family:'IM Fell English',serif; font-size:clamp(.45rem,1.2vw,.6rem); text-align:center; padding:3px 4px 5px; color:#555; font-style:italic; border-top:1px solid rgba(201,168,76,.2); background:rgba(201,168,76,.05); }
+
+  .card-spade .val,.card-spade .suit-sm{color:#1a1a2e;}
+  .card-club  .val,.card-club  .suit-sm{color:#0d2010;}
+  .card-diamond .val,.card-diamond .suit-sm{color:#8b0000;}
+  .card-heart   .val,.card-heart   .suit-sm{color:#8b0000;}
+  .card-spade .card-inner  {background:linear-gradient(160deg,#f0eedc,#e8e4cc);}
+  .card-club .card-inner   {background:linear-gradient(160deg,#edf0e8,#e0e8dc);}
+  .card-diamond .card-inner{background:linear-gradient(160deg,#f5ece8,#edddd8);}
+  .card-heart .card-inner  {background:linear-gradient(160deg,#f5e8e8,#eddada);}
+
+  .slots-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .slot { aspect-ratio:2.5/3.5; border-radius:10px; border:1px solid var(--gold-dim); background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; position:relative; overflow:hidden; min-height:100px; transition:border-color .2s,box-shadow .2s; }
+  #weapon-slot, #potion-bag-slot, #weapon-bag-slot { overflow:visible; }
+  .slot::before { content:''; position:absolute; inset:3px; border-radius:7px; border:1px solid rgba(201,168,76,.1); pointer-events:none; }
+  .slot-icon { font-size:clamp(1.4rem,3.5vw,2rem); opacity:.4; }
+  .slot-label { font-size:clamp(.4rem,1vw,.5rem); letter-spacing:.2em; color:var(--gold-dim); text-transform:uppercase; text-align:center; padding:0 4px; }
+  .slot.has-card { border-color:var(--gold); }
+  .slot.has-card>.slot-icon,.slot.has-card>.slot-label { display:none; }
+  .slot .card { position:absolute; inset:0; width:100%; height:100%; cursor:default; }
+  .slot .card:hover { transform:none; }
+  .slot .card.fanned { inset:auto; top:0; left:0; right:0; bottom:0; }
+  .drop-target { border-color:var(--gold)!important; box-shadow:0 0 16px rgba(201,168,76,.5)!important; }
+
+  #drag-ghost { position:fixed; pointer-events:none; z-index:9999; width:80px; height:112px; border-radius:8px; transform:translate(-50%,-50%) rotate(4deg) scale(1.08); box-shadow:0 16px 40px rgba(0,0,0,.7),0 0 20px rgba(201,168,76,.3); opacity:.92; display:none; }
+
+  .discard-count { position:absolute; bottom:6px; right:8px; font-size:.55rem; color:var(--gold-dim); font-family:'Cinzel',serif; z-index:3; }
+  .weapon-degrade { position:absolute; bottom:4px; left:0; right:0; text-align:center; font-size:.4rem; color:#e07070; letter-spacing:.1em; z-index:3; font-family:'Cinzel',serif; }
+  .bag-tag { position:absolute; bottom:4px; left:0; right:0; text-align:center; font-size:.4rem; color:var(--gold); letter-spacing:.1em; z-index:3; font-family:'Cinzel',serif; pointer-events:none; }
+
+  .action-panel { background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); border:1px solid var(--gold-dim); border-radius:8px; padding:12px; }
+  .action-title { font-size:.55rem; letter-spacing:.35em; color:var(--gold-dim); text-transform:uppercase; margin-bottom:8px; text-align:center; }
+  .action-buttons { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .btn { font-family:'Cinzel',serif; font-size:clamp(.55rem,1.5vw,.7rem); letter-spacing:.1em; padding:7px 14px; border-radius:5px; border:1px solid var(--gold-dim); background:linear-gradient(135deg,var(--stone-light),var(--stone-mid)); color:var(--parchment); cursor:pointer; transition:all .2s; text-transform:uppercase; }
+  .btn:hover:not(:disabled) { border-color:var(--gold); background:linear-gradient(135deg,var(--stone-highlight),var(--stone-light)); color:var(--gold-light); box-shadow:0 0 10px rgba(201,168,76,.2); }
+  .btn:disabled { opacity:.35; cursor:not-allowed; }
+  .btn-danger { border-color:var(--blood); color:#e07070; }
+  .btn-danger:hover:not(:disabled) { border-color:var(--blood-light); background:linear-gradient(135deg,rgba(139,26,26,.3),var(--stone-mid)); color:#ff9090; box-shadow:0 0 10px rgba(192,57,43,.3); }
+  .btn-primary { border-color:var(--gold); color:var(--gold-light); }
+
+  .hint-bar { text-align:center; font-family:'IM Fell English',serif; font-style:italic; font-size:.68rem; color:var(--gold-dim); min-height:1.2em; transition:color .2s; }
+  .hint-bar.active { color:var(--parchment-dim); }
+
+  .log-panel { background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); border:1px solid var(--stone-highlight); border-radius:8px; padding:10px 12px; max-height:90px; overflow-y:auto; }
+  .log-panel::-webkit-scrollbar{width:4px;} .log-panel::-webkit-scrollbar-track{background:var(--stone-dark);} .log-panel::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px;}
+  .log-entry { font-family:'IM Fell English',serif; font-size:clamp(.65rem,1.8vw,.8rem); color:var(--parchment-dim); padding:2px 0; border-bottom:1px solid rgba(255,255,255,.03); font-style:italic; }
+  .log-entry.highlight{color:var(--gold-light);}
+  .log-entry.damage{color:#e07070;}
+  .log-entry.heal{color:#70c070;}
+  .log-entry.system{color:var(--gold-dim);letter-spacing:.1em;font-style:normal;font-family:'Cinzel',serif;font-size:.6rem;}
+
+  .room-info { display:flex; justify-content:center; gap:16px; font-size:.55rem; letter-spacing:.2em; color:var(--gold-dim); text-transform:uppercase; }
+  .room-info span { color:var(--parchment-dim); }
+
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .overlay.active{display:flex;}
+  .overlay-box { background:linear-gradient(135deg,var(--stone-mid),var(--stone-dark)); border:2px solid var(--gold); border-radius:12px; padding:32px 40px; text-align:center; max-width:360px; box-shadow:0 0 40px rgba(201,168,76,.2),0 20px 60px rgba(0,0,0,.8); animation:overlayIn .4s ease-out; }
+  @keyframes overlayIn{from{transform:scale(.8);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .overlay-title { font-family:'Cinzel Decorative',serif; font-size:1.6rem; color:var(--gold); text-shadow:0 0 20px rgba(201,168,76,.5); margin-bottom:8px; }
+  .overlay-title.death{color:var(--blood-light);text-shadow:0 0 20px rgba(192,57,43,.5);}
+  .overlay-msg { font-family:'IM Fell English',serif; font-style:italic; color:var(--parchment-dim); font-size:.9rem; margin-bottom:20px; line-height:1.5; }
+
+  @keyframes damageFlash{0%{background-color:transparent}20%{background-color:rgba(139,26,26,.25)}100%{background-color:transparent}}
+  @keyframes healFlash  {0%{background-color:transparent}20%{background-color:rgba(26,139,26,.15)} 100%{background-color:transparent}}
+  .damage-flash{animation:damageFlash .5s ease-out;}
+  .heal-flash  {animation:healFlash   .5s ease-out;}
+
+  html{scrollbar-width:thin;scrollbar-color:var(--gold-dim) var(--stone-dark);}
+</style>
+</head>
+<body>
+
+<div class="torch torch-left"></div>
+<div class="torch torch-right"></div>
+<div class="torch-glow torch-glow-left"></div>
+<div class="torch-glow torch-glow-right"></div>
+<div id="drag-ghost"></div>
+
+<div id="game">
+  <div class="game-title">Castle Siege Solitaire</div>
+  <div class="title-divider">✦ &nbsp; A SOLITAIRE SIEGE &nbsp; ✦</div>
+
+  <div class="top-row">
+    <div class="hp-panel" id="hp-panel">
+      <div class="hp-label">⚔ Vitality</div>
+      <div class="hp-value" id="hp-display">20 <span>/ 20</span></div>
+      <div class="hp-bar-track"><div class="hp-bar-fill" id="hp-bar" style="width:100%"></div></div>
+      <div class="status-tag safe" id="status-tag">Unscathed</div>
+    </div>
+    <div class="action-panel" style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;align-self:stretch;">
+      <div class="action-title">✦ Actions ✦</div>
+      <div class="action-buttons" style="flex-direction:column;">
+        <button class="btn btn-primary" id="btn-deal" onclick="dealRoom()" disabled>Deal Room</button>
+        <button class="btn btn-danger"  id="btn-run"  onclick="runFromRoom()" disabled>Flee the Chamber</button>
+        <button class="btn" id="btn-reshuffle" onclick="startGame()" style="margin-top:4px;border-color:#555;color:#888;font-size:clamp(.45rem,1.2vw,.58rem);">↺ Reshuffle &amp; Start Over</button>
+      </div>
+    </div>
+    <div class="castle-area">
+      <div class="castle-label">✦ The Castle ✦</div>
+      <div class="castle">
+        <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+          <rect x="5" y="40" width="70" height="55" fill="#1a1828" stroke="#c9a84c" stroke-width="1"/>
+          <rect x="28" y="60" width="24" height="35" rx="12" fill="#0a0a0f" stroke="#7a6230" stroke-width=".5"/>
+          <rect x="2" y="28" width="22" height="45" fill="#1a1828" stroke="#c9a84c" stroke-width="1"/>
+          <rect x="56" y="28" width="22" height="45" fill="#1a1828" stroke="#c9a84c" stroke-width="1"/>
+          <rect x="2"  y="22" width="5" height="8" fill="#1a1828" stroke="#c9a84c" stroke-width=".8"/>
+          <rect x="10" y="22" width="5" height="8" fill="#1a1828" stroke="#c9a84c" stroke-width=".8"/>
+          <rect x="18" y="22" width="5" height="8" fill="#1a1828" stroke="#c9a84c" stroke-width=".8"/>
+          <rect x="56" y="22" width="5" height="8" fill="#1a1828" stroke="#c9a84c" stroke-width=".8"/>
+          <rect x="64" y="22" width="5" height="8" fill="#1a1828" stroke="#c9a84c" stroke-width=".8"/>
+          <rect x="72" y="22" width="5" height="8" fill="#1a1828" stroke="#c9a84c" stroke-width=".8"/>
+          <rect x="15" y="34" width="5" height="8" fill="#1a1828" stroke="#c9a84c" stroke-width=".8"/>
+          <rect x="23" y="34" width="5" height="8" fill="#1a1828" stroke="#c9a84c" stroke-width=".8"/>
+          <rect x="52" y="34" width="5" height="8" fill="#1a1828" stroke="#c9a84c" stroke-width=".8"/>
+          <rect x="60" y="34" width="5" height="8" fill="#1a1828" stroke="#c9a84c" stroke-width=".8"/>
+          <rect x="8"  y="38" width="7" height="9" rx="3.5" fill="#c9a84c" opacity=".3"/>
+          <rect x="65" y="38" width="7" height="9" rx="3.5" fill="#c9a84c" opacity=".3"/>
+          <line x1="40" y1="2" x2="40" y2="20" stroke="#c9a84c" stroke-width="1"/>
+          <polygon points="40,2 54,8 40,14" fill="#8b1a1a" stroke="#c9a84c" stroke-width=".5"/>
+          <ellipse cx="40" cy="95" rx="15" ry="4" fill="rgba(201,168,76,.1)"/>
+        </svg>
+      </div>
+      <div class="deck-count" id="deck-count">46</div>
+    </div>
+  </div>
+
+  <div class="room-info">
+    Room <span id="room-num">—</span> &nbsp;|&nbsp; Interacted: <span id="interacted-count">0</span>/3 &nbsp;|&nbsp; Flee: <span id="can-run-display">Yes</span>
+  </div>
+
+  <div class="hint-bar" id="hint-bar">Drag cards to interact</div>
+
+  <div class="section-label">✦ The Chamber ✦</div>
+  <div class="room" id="room">
+    <div class="card-slot" id="slot-0"></div>
+    <div class="card-slot" id="slot-1"></div>
+    <div class="card-slot" id="slot-2"></div>
+    <div class="card-slot" id="slot-3"></div>
+  </div>
+
+  <div class="section-label">✦ Your Possessions ✦</div>
+  <div class="slots-row">
+    <div class="slot" id="potion-bag-slot">
+      <div class="slot-icon">🧴</div><div class="slot-label">Potion Bag</div>
+    </div>
+    <div class="slot" id="weapon-bag-slot">
+      <div class="slot-icon">⚔</div><div class="slot-label">Weapon Bag</div>
+    </div>
+    <div class="slot" id="weapon-slot">
+      <div class="slot-icon">🗡</div><div class="slot-label">Weapon</div>
+    </div>
+    <div class="slot" id="discard-slot">
+      <div class="slot-icon">💀</div><div class="slot-label">Discard</div>
+    </div>
+  </div>
+
+  <div class="log-panel" id="log"></div>
+</div>
+
+<!-- Overlays -->
+<div class="overlay active" id="overlay-start">
+  <div class="overlay-box">
+    <div class="overlay-title">Castle Siege Solitaire</div>
+    <div class="overlay-msg">The castle walls await, Hero.<br>Breach every chamber and slay every enemy.<br><br><strong style="color:var(--gold);font-style:normal;">How to play:</strong><br>Drag cards onto targets to act.<br>Enemies → Weapon slot or Discard.<br>Potions → HP bar to drink.<br>Weapons → Weapon slot to equip.</div>
+    <button class="btn btn-primary" onclick="startGame()" style="font-size:.8rem;padding:10px 24px;margin-top:4px;">Enter the Castle</button>
+  </div>
+</div>
+<div class="overlay" id="overlay-death">
+  <div class="overlay-box">
+    <div class="overlay-title death">Slain</div>
+    <div class="overlay-msg" id="death-msg">You have fallen in the siege.</div>
+    <button class="btn btn-danger" onclick="startGame()" style="font-size:.8rem;padding:10px 24px;">Try Again</button>
+  </div>
+</div>
+<div class="overlay" id="overlay-win">
+  <div class="overlay-box">
+    <div class="overlay-title">Victory</div>
+    <div class="overlay-msg" id="win-msg">The castle has fallen.<br>You have survived the Castle Siege Solitaire's castle.</div>
+    <button class="btn btn-primary" onclick="startGame()" style="font-size:.8rem;padding:10px 24px;">Play Again</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+//  CONSTANTS & HELPERS
+// ═══════════════════════════════════
+const SYM = {spade:'♠',club:'♣',diamond:'♦',heart:'♥'};
+
+function numVal(c){
+  if(c.value==='A') return 14;
+  if(c.value==='J') return 11;
+  if(c.value==='Q') return 12;
+  if(c.value==='K') return 13;
+  return c.value;
+}
+
+function buildDeck(){
+  const d=[];
+  for(const s of ['spade','club'])
+    for(const v of ['A',2,3,4,5,6,7,8,9,10,'J','Q','K'])
+      d.push({suit:s,value:v,type:'enemy'});
+  d.push({suit:'diamond',value:'A',type:'weapon-bag'});
+  for(const v of [2,3,4,5,6,7,8,9,10]) d.push({suit:'diamond',value:v,type:'weapon'});
+  d.push({suit:'heart',value:'A',type:'potion-bag'});
+  for(const v of [2,3,4,5,6,7,8,9,10]) d.push({suit:'heart',value:v,type:'potion'});
+  return d;
+}
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+// ═══════════════════════════════════
+//  CARD DISPLAY
+// ═══════════════════════════════════
+function emoji(c){
+  const v=numVal(c);
+  if(c.type==='enemy'){
+    if(c.suit==='spade') return [,'🗡','🗡','⚔','⚔','⚔','🛡','🛡','🛡','🛡','🛡','🪖','👑','💀','☠'][v];
+    return [,'🕯','🕯','📿','📿','📿','🔮','🔮','🔮','🔮','🔮','⚗','🌑','🕸','👁'][v];
+  }
+  if(c.type==='weapon') return ['','🗡','🗡','🗡','⚔','⚔','🪃','🏹','⚔','🪖','✨'][v]||'⚔';
+  if(c.type==='potion') return v<=3?'💧':v<=5?'🧪':v<=7?'⚗':'🍶';
+  if(c.type==='potion-bag') return '🧴';
+  if(c.type==='weapon-bag') return '⚔';
+  return '?';
+}
+
+function name(c){
+  const v=numVal(c);
+  if(c.type==='enemy'){
+    if(c.suit==='spade') return ({2:'Squire',3:'Scout',4:'Footman',5:'Guard',6:'Sergeant',7:'Knight',8:'Champion',9:'Warlord',10:'Dread Knight',11:'Black Knight',12:'Death Knight',13:'Shadow King',14:'The Dark One'})[v]||'Knight';
+    return ({2:'Initiate',3:'Acolyte',4:'Cultist',5:'Zealot',6:'Warlock',7:'Hexblade',8:'Dark Priest',9:'Lich',10:'Void Caller',11:'Archfiend',12:'Soul Eater',13:'Abyssal Lord',14:'The Undying'})[v]||'Cultist';
+  }
+  if(c.type==='weapon') return ({2:'Rusty Dagger',3:'Iron Knife',4:'Short Sword',5:'Longsword',6:'War Axe',7:'Claymore',8:'Enchanted Blade',9:'Runesword',10:'Excalibur'})[v]||'Weapon';
+  if(c.type==='potion') return ({2:'Dram of Mending',3:'Healing Vial',4:'Restorative',5:'Elixir',6:'Draught of Vigor',7:'Tonic of Life',8:'Grand Elixir',9:'Potion of Vitality',10:'Blessed Brew'})[v]||'Potion';
+  if(c.type==='potion-bag') return 'Potion Belt';
+  if(c.type==='weapon-bag') return 'Sword Scabbard';
+  return '';
+}
+
+function makeCard(card, draggable=false, faded=false){
+  const el=document.createElement('div');
+  el.className=`card card-${card.suit}${faded?' card-used':''}`;
+  if(draggable) el.setAttribute('draggable','true');
+  el.innerHTML=`
+    <div class="card-inner">
+      <div class="card-corner tl"><span class="val">${card.value}</span><span class="suit-sm">${SYM[card.suit]}</span></div>
+      <div class="card-art">${emoji(card)}</div>
+      <div class="card-corner br"><span class="val">${card.value}</span><span class="suit-sm">${SYM[card.suit]}</span></div>
+      <div class="card-name">${name(card)}</div>
+    </div>`;
+  return el;
+}
+
+// ═══════════════════════════════════
+//  STATE
+// ═══════════════════════════════════
+let G={};
+
+function fresh(){
+  return {
+    deck:shuffle(buildDeck()),
+    room:[null,null,null,null],
+    used:[false,false,false,false],
+    discard:[],
+    hp:20, maxHp:20,
+    weapon:null,
+    weaponBag:false, potionBag:false,
+    weaponBagItem:null, potionBagItem:null,
+    healedThisRoom:false,
+    ranLastRoom:false,
+    roomNumber:0,
+    interacted:0,
+    phase:'idle',
+  };
+}
+
+// ═══════════════════════════════════
+//  DRAG STATE
+// ═══════════════════════════════════
+let D={active:false,card:null,source:null,el:null};
+const ghost=document.getElementById('drag-ghost');
+
+// Valid drop targets for a given card+source
+function validTargets(card,source){
+  const t=card.type;
+  if(source==='potion-bag-item') return ['hp-panel'];
+  if(source==='weapon-bag-item') return ['weapon-slot'];
+
+  // from room
+  const out=[];
+  if(t==='enemy'){
+    out.push('weapon-slot'); // fight with weapon
+    out.push('discard-slot'); // fight bare
+  }
+  if(t==='weapon'){
+    out.push('weapon-slot');
+    out.push('discard-slot');
+    if(G.weaponBag && !G.weaponBagItem) out.push('weapon-bag-slot');
+  }
+  if(t==='potion'){
+    out.push('hp-panel');
+    out.push('discard-slot');
+    if(G.potionBag && !G.potionBagItem) out.push('potion-bag-slot');
+  }
+  if(t==='potion-bag') out.push('potion-bag-slot','discard-slot');
+  if(t==='weapon-bag') out.push('weapon-bag-slot','discard-slot');
+  return out;
+}
+
+function startDrag(e,card,source,el){
+  if(G.phase!=='room') return;
+  if(source.startsWith('room-')){
+    const i=+source.split('-')[1];
+    if(G.used[i]) return;
+    if(G.interacted>=3){hint('You may only interact with 3 cards per room.');return;}
+  }
+  e.preventDefault();
+  D={active:true,card,source,el};
+  el.classList.add('dragging');
+
+  // Build ghost
+  ghost.innerHTML='';
+  const cl=makeCard(card,false,false);
+  cl.style.cssText='width:100%;height:100%;';
+  ghost.appendChild(cl);
+  ghost.style.display='block';
+  moveGhost(e);
+
+  // Highlight valid targets
+  const vt=validTargets(card,source);
+  ['hp-panel','weapon-slot','discard-slot','potion-bag-slot','weapon-bag-slot'].forEach(id=>{
+    const el2=document.getElementById(id);
+    if(el2) el2.classList.toggle('drop-target',vt.includes(id));
+  });
+
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('touchend',onUp);
+}
+
+function moveGhost(e){
+  const x=e.touches?e.touches[0].clientX:e.clientX;
+  const y=e.touches?e.touches[0].clientY:e.clientY;
+  ghost.style.left=x+'px'; ghost.style.top=y+'px';
+}
+
+function onMove(e){ if(!D.active) return; e.preventDefault(); moveGhost(e); }
+
+function onUp(e){
+  if(!D.active) return;
+  document.removeEventListener('mousemove',onMove);
+  document.removeEventListener('mouseup',onUp);
+  document.removeEventListener('touchmove',onMove);
+  document.removeEventListener('touchend',onUp);
+  ghost.style.display='none';
+  D.el.classList.remove('dragging');
+
+  // Clear highlights
+  ['hp-panel','weapon-slot','discard-slot','potion-bag-slot','weapon-bag-slot'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.remove('drop-target');
+  });
+
+  const cx=e.changedTouches?e.changedTouches[0].clientX:e.clientX;
+  const cy=e.changedTouches?e.changedTouches[0].clientY:e.clientY;
+  const target=hitTest(cx,cy);
+
+  const ok=target && handleDrop(D.card,D.source,target);
+  if(!ok) { D.el.classList.add('snap-back'); setTimeout(()=>D.el.classList.remove('snap-back'),300); }
+
+  D={active:false,card:null,source:null,el:null};
+}
+
+function hitTest(x,y){
+  for(const id of ['hp-panel','weapon-slot','discard-slot','potion-bag-slot','weapon-bag-slot']){
+    const el=document.getElementById(id);
+    if(!el) continue;
+    const r=el.getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom) return id;
+  }
+  return null;
+}
+
+// ═══════════════════════════════════
+//  DROP HANDLER
+// ═══════════════════════════════════
+function handleDrop(card,source,targetId){
+  const vt=validTargets(card,source);
+  if(!vt.includes(targetId)){hint('You cannot do that.');return false;}
+
+  // From bags
+  if(source==='potion-bag-item'){
+    if(G.healedThisRoom){hint('You can only heal once per room.');return false;}
+    const h=numVal(card); const actual=Math.min(h,G.maxHp-G.hp);
+    G.hp=Math.min(G.maxHp,G.hp+h); G.healedThisRoom=true;
+    G.potionBagItem=null; G.discard.push(card);
+    log(`You drink the ${name(card)} from your belt, restoring ${actual} vitality.`,'heal');
+    flashHeal(); renderAll(); updateButtons(); return true;
+  }
+  if(source==='weapon-bag-item'){
+    const old=G.weapon; G.weapon={...card,kills:[]};
+    G.weaponBagItem=null;
+    if(old) G.discard.push(old);
+    log(`You draw the ${name(card)} from your scabbard.`,'highlight');
+    renderAll(); updateButtons(); return true;
+  }
+
+  // From room
+  const idx=+source.split('-')[1];
+
+  if(targetId==='discard-slot'){
+    if(card.type==='enemy'){ doBarehanded(card,idx); return true; }
+    G.used[idx]=true; G.interacted++;
+    G.discard.push(card);
+    if(card.type==='weapon') log(`You discard the ${name(card)}.`,'');
+    else if(card.type==='potion') log(`You leave the ${name(card)} untouched.`,'');
+    else log(`You discard the ${name(card)}.`,'');
+    afterAct(); return true;
+  }
+
+  if(targetId==='weapon-slot'){
+    if(card.type==='enemy'){ doWeaponFight(card,idx); return true; }
+    if(card.type==='weapon'){
+      const old=G.weapon; G.weapon={...card,kills:[]};
+      G.used[idx]=true; G.interacted++;
+      if(old){
+        // Discard old weapon and all its kills
+        G.discard.push(old);
+        for(const k of old.kills) G.discard.push(k);
+        log(`You swap your ${name(old)} for the ${name(card)}.`,'highlight');
+      } else log(`You equip the ${name(card)}.`,'highlight');
+      afterAct(); return true;
+    }
+  }
+
+  if(targetId==='hp-panel' && card.type==='potion'){
+    if(G.healedThisRoom){hint('You can only heal once per room.');return false;}
+    if(G.used[idx]){hint('That card has already been used.');return false;}
+    if(G.hp>=G.maxHp){
+      G.used[idx]=true; G.interacted++;
+      G.discard.push(card); G.healedThisRoom=true;
+      log(`You drink the ${name(card)} but are already at full health — wasted!`,'');
+      afterAct(); return true;
+    }
+    doHeal(card,idx); return true;
+  }
+
+  if(targetId==='potion-bag-slot'){
+    if(card.type==='potion-bag'){
+      G.potionBag=true; G.used[idx]=true; G.interacted++;
+      log(`You secure the Potion Belt around your waist.`,'highlight');
+      afterAct(); return true;
+    }
+    if(card.type==='potion'){
+      if(!G.potionBag){hint('You need a Potion Belt first.');return false;}
+      if(G.potionBagItem){hint('Your belt already holds a potion.');return false;}
+      G.potionBagItem=card; G.used[idx]=true; G.interacted++;
+      log(`You store the ${name(card)} in your belt.`,'highlight');
+      afterAct(); return true;
+    }
+  }
+
+  if(targetId==='weapon-bag-slot'){
+    if(card.type==='weapon-bag'){
+      G.weaponBag=true; G.used[idx]=true; G.interacted++;
+      log(`You strap the Sword Scabbard to your back.`,'highlight');
+      afterAct(); return true;
+    }
+    if(card.type==='weapon'){
+      if(!G.weaponBag){hint('You need a Sword Scabbard first.');return false;}
+      if(G.weaponBagItem){hint('Your scabbard already holds a weapon.');return false;}
+      G.weaponBagItem=card; G.used[idx]=true; G.interacted++;
+      log(`You store the ${name(card)} in your scabbard.`,'highlight');
+      afterAct(); return true;
+    }
+  }
+
+  return false;
+}
+
+// ═══════════════════════════════════
+//  COMBAT & ACTIONS
+// ═══════════════════════════════════
+function doBarehanded(card,idx){
+  const dmg=numVal(card);
+  G.used[idx]=true; G.interacted++;
+  G.discard.push(card);
+  log(`You fight the ${name(card)} bare-handed and take ${dmg} damage!`,'damage');
+  takeDamage(dmg);
+  if(G.hp>0) afterAct();
+}
+
+function doWeaponFight(card,idx){
+  if(!G.weapon){hint('No weapon equipped — drag to Discard to fight bare-handed.');return;}
+  const mv=numVal(card), wv=numVal(G.weapon);
+  const lastKill=G.weapon.kills.length>0?G.weapon.kills[G.weapon.kills.length-1]:null;
+  const canUse=lastKill===null||mv<numVal(lastKill);
+  if(!canUse){hint(`Your ${name(G.weapon)} is too dull for this foe. Drag to Discard instead.`);return;}
+  const dmg=Math.max(0,mv-wv);
+  G.weapon.kills.push(card);
+  G.used[idx]=true; G.interacted++;
+  if(dmg===0) log(`Your ${name(G.weapon)} fells the ${name(card)} without a scratch!`,'highlight');
+  else log(`You fight the ${name(card)} with your ${name(G.weapon)} and take ${dmg} damage.`,'damage');
+  takeDamage(dmg);
+  if(G.hp>0) afterAct();
+}
+
+function doHeal(card,idx){
+  const h=numVal(card); const actual=Math.min(h,G.maxHp-G.hp);
+  G.hp=Math.min(G.maxHp,G.hp+h); G.healedThisRoom=true;
+  G.used[idx]=true; G.interacted++;
+  G.discard.push(card);
+  log(`You drink the ${name(card)} and restore ${actual} vitality.`,'heal');
+  flashHeal(); afterAct();
+}
+
+function afterAct(){
+  renderAll(); updateButtons();
+  if(G.interacted>=3){
+    const rem=G.room.filter((c,i)=>c&&!G.used[i]).length;
+    const remCards=G.room.filter((c,i)=>c&&!G.used[i]);
+    const enemiesLeft=remCards.filter(c=>c.type==='enemy').length;
+    if(G.deck.length===0&&rem<=1){
+      if(enemiesLeft>0){
+        hint('A enemy still lurks in the chamber — slay all beasts to claim the castle!');
+        return;
+      }
+      triggerWin(); return;
+    }
+    hint('Chamber cleared — advance to the next.');
+  }
+}
+
+// ═══════════════════════════════════
+//  GAME FLOW
+// ═══════════════════════════════════
+function startGame(){
+  G=fresh(); hideOverlays(); clearLog();
+  log('The castle gates have been breached...','system');
+  log('Steel yourself, Hero. The siege begins.','highlight');
+  renderAll(); dealRoom();
+}
+
+function dealRoom(fromFlee=false){
+  if(G.deck.length===0&&G.room.every(c=>c===null)){triggerWin();return;}
+  // Block dealing if enemies remain and deck is empty
+  const activeEnemies=G.room.filter((c,i)=>c&&!G.used[i]&&c.type==='enemy');
+  if(G.deck.length===0&&activeEnemies.length>0){
+    hint('You cannot advance — a enemy still defends this chamber!');
+    return;
+  }
+  G.roomNumber++; G.healedThisRoom=false; G.interacted=0;
+
+  // Find leftover
+  let leftover=null;
+  for(let i=0;i<4;i++) if(G.room[i]&&!G.used[i]){leftover=G.room[i];break;}
+
+  G.room=[null,null,null,null]; G.used=[false,false,false,false];
+
+  if(leftover) G.room[0]=leftover;
+  let filled=leftover?1:0;
+  for(let i=0;i<4&&filled<4&&G.deck.length>0;i++) if(!G.room[i]){G.room[i]=G.deck.shift();filled++;}
+
+  // Only reset ranLastRoom if this deal was triggered by the player, not by a flee
+  if(!fromFlee) G.ranLastRoom=false;
+  G.phase='room';
+
+  if(leftover) log(`Room ${G.roomNumber}: A ${name(leftover)} remains from the last chamber...`,'highlight');
+  else         log(`Room ${G.roomNumber}: Four enemies breach the chamber.`,'system');
+
+  renderAll(); updateButtons();
+  hint('Drag cards to interact');
+}
+
+function runFromRoom(){
+  if(G.ranLastRoom){log('You cannot flee twice in a row!','damage');return;}
+  const cards=G.room.filter(Boolean);
+  for(const c of cards) G.deck.push(c);
+  shuffle(G.deck);
+  G.room=[null,null,null,null]; G.used=[false,false,false,false];
+  G.interacted=0; G.healedThisRoom=false; G.ranLastRoom=true;
+  log('You flee the chamber! The castle shifts around you.','damage');
+  renderAll(); updateButtons();
+  setTimeout(()=>dealRoom(true),400);
+}
+
+// ═══════════════════════════════════
+//  HEALTH
+// ═══════════════════════════════════
+function takeDamage(amt){
+  if(amt<=0) return;
+  G.hp-=amt; flashDamage(); renderAll(); updateButtons();
+  if(G.hp<=0) triggerDeath();
+}
+function flashDamage(){fl('damage-flash');}
+function flashHeal()  {fl('heal-flash');}
+function fl(cls){const g=document.getElementById('game');g.classList.add(cls);setTimeout(()=>g.classList.remove(cls),500);}
+
+// ═══════════════════════════════════
+//  WIN / DEATH
+// ═══════════════════════════════════
+function triggerDeath(){G.phase='gameover';document.getElementById('overlay-death').classList.add('active');log('You have fallen.','damage');}
+function triggerWin(){
+  G.phase='win';
+  document.getElementById('win-msg').innerHTML=`The castle has fallen.<br>You survived with ${G.hp} vitality remaining.<br><em style="font-size:.8em;color:var(--gold-dim)">The Castle Siege Solitaire's castle falls silent.</em>`;
+  document.getElementById('overlay-win').classList.add('active');
+  log('The castle is taken. Victory!','highlight');
+}
+
+
+
+// ═══════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════
+function renderAll(){ renderRoom(); renderSlots(); renderHp(); renderInfo(); }
+
+function renderRoom(){
+  for(let i=0;i<4;i++){
+    const slot=document.getElementById(`slot-${i}`);
+    slot.innerHTML='';
+    const card=G.room[i]; if(!card) continue;
+    const used=G.used[i];
+    const el=makeCard(card,!used,used);
+    if(!used) el.addEventListener('mousedown', e=>startDrag(e,card,`room-${i}`,el));
+    if(!used) el.addEventListener('touchstart',e=>startDrag(e,card,`room-${i}`,el),{passive:false});
+    slot.appendChild(el);
+  }
+}
+
+function renderSlots(){
+  // Potion bag
+  const pb=document.getElementById('potion-bag-slot');
+  pb.innerHTML='';
+  if(G.potionBag){
+    pb.classList.add('has-card');
+    // Bag card peeks behind stored potion
+    const wrapPb=document.createElement('div');
+    wrapPb.style.cssText='position:absolute;inset:0;z-index:1;pointer-events:none;transform:rotate(-8deg) translate(-5px,4px);transform-origin:center bottom;';
+    const bagElPb=makeCard({suit:'heart',value:'A',type:'potion-bag'},false,false);
+    bagElPb.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
+    wrapPb.appendChild(bagElPb);
+    pb.appendChild(wrapPb);
+    if(G.potionBagItem){
+      const stored=makeCard(G.potionBagItem,false,false);
+      stored.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:10;pointer-events:none;';
+      pb.appendChild(stored);
+      const dragEl=makeCard(G.potionBagItem,true,false);
+      dragEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:11;opacity:0;cursor:grab;';
+      dragEl.addEventListener('mousedown', e=>startDrag(e,G.potionBagItem,'potion-bag-item',dragEl));
+      dragEl.addEventListener('touchstart',e=>startDrag(e,G.potionBagItem,'potion-bag-item',dragEl),{passive:false});
+      pb.appendChild(dragEl);
+      const t=document.createElement('div'); t.className='bag-tag'; t.textContent='DRAG TO HP';
+      pb.appendChild(t);
+    } else {
+      const t=document.createElement('div'); t.className='bag-tag'; t.textContent='EMPTY';
+      pb.appendChild(t);
+    }
+  } else {
+    pb.classList.remove('has-card');
+    pb.innerHTML='<div class="slot-icon">🧴</div><div class="slot-label">Potion Bag</div>';
+  }
+
+  // Weapon bag
+  const wb=document.getElementById('weapon-bag-slot');
+  wb.innerHTML='';
+  if(G.weaponBag){
+    wb.classList.add('has-card');
+    // Bag card peeks behind stored weapon
+    const wrapWb=document.createElement('div');
+    wrapWb.style.cssText='position:absolute;inset:0;z-index:1;pointer-events:none;transform:rotate(-8deg) translate(-5px,4px);transform-origin:center bottom;';
+    const bagElWb=makeCard({suit:'diamond',value:'A',type:'weapon-bag'},false,false);
+    bagElWb.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
+    wrapWb.appendChild(bagElWb);
+    wb.appendChild(wrapWb);
+    if(G.weaponBagItem){
+      const stored=makeCard(G.weaponBagItem,false,false);
+      stored.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:10;pointer-events:none;';
+      wb.appendChild(stored);
+      const dragEl=makeCard(G.weaponBagItem,true,false);
+      dragEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:11;opacity:0;cursor:grab;';
+      dragEl.addEventListener('mousedown', e=>startDrag(e,G.weaponBagItem,'weapon-bag-item',dragEl));
+      dragEl.addEventListener('touchstart',e=>startDrag(e,G.weaponBagItem,'weapon-bag-item',dragEl),{passive:false});
+      wb.appendChild(dragEl);
+      const t=document.createElement('div'); t.className='bag-tag'; t.textContent='DRAG TO WEAPON';
+      wb.appendChild(t);
+    } else {
+      const t=document.createElement('div'); t.className='bag-tag'; t.textContent='EMPTY';
+      wb.appendChild(t);
+    }
+  } else {
+    wb.classList.remove('has-card');
+    wb.innerHTML='<div class="slot-icon">⚔</div><div class="slot-label">Weapon Bag</div>';
+  }
+
+  // Weapon slot
+  const ws=document.getElementById('weapon-slot');
+  ws.innerHTML='';
+  if(G.weapon){
+    ws.classList.add('has-card');
+    // Weapon card peeks from behind on the left
+    const kills=G.weapon.kills;
+    const el=makeCard(G.weapon,false,false);
+    el.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1;';
+    ws.appendChild(el);
+    // Slain enemies fan out to the right on top, semi-transparent
+    const maxFan=Math.min(kills.length,5);
+    for(let k=0;k<maxFan;k++){
+      const kc=kills[k];
+      // Each card shifts progressively right and rotates slightly
+      const tx=(k+1)*18;
+      const angle=(k+1)*6;
+      const wrapper=document.createElement('div');
+      wrapper.style.cssText=`position:absolute;inset:0;z-index:${k+2};pointer-events:none;transform:translate(${tx}px,0) rotate(${angle}deg);transform-origin:center bottom;opacity:0.7;`;
+      const kEl=makeCard(kc,false,false);
+      kEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
+      wrapper.appendChild(kEl);
+      ws.appendChild(wrapper);
+    }
+    if(kills.length>0){
+      const lastKillVal=numVal(kills[kills.length-1]);
+      const t=document.createElement('div'); t.className='weapon-degrade';
+      t.textContent=`MAX vs. < ${lastKillVal}`;
+      ws.appendChild(t);
+    }
+  } else {
+    ws.classList.remove('has-card');
+    ws.innerHTML='<div class="slot-icon">🗡</div><div class="slot-label">Weapon</div>';
+  }
+
+  // Discard
+  const ds=document.getElementById('discard-slot');
+  ds.innerHTML='';
+  const valid=G.discard.filter(Boolean);
+  if(valid.length>0){
+    ds.classList.add('has-card');
+    const el=makeCard(valid[valid.length-1],false,true);
+    ds.appendChild(el);
+    const cnt=document.createElement('div'); cnt.className='discard-count'; cnt.textContent=valid.length;
+    ds.appendChild(cnt);
+  } else {
+    ds.classList.remove('has-card');
+    ds.innerHTML='<div class="slot-icon">💀</div><div class="slot-label">Discard</div>';
+  }
+}
+
+function renderHp(){
+  const hp=Math.max(0,G.hp);
+  document.getElementById('hp-display').innerHTML=`${hp} <span>/ ${G.maxHp}</span>`;
+  document.getElementById('hp-bar').style.width=`${hp/G.maxHp*100}%`;
+  const tag=document.getElementById('status-tag');
+  if(hp>14){tag.textContent='Unscathed';tag.className='status-tag safe';}
+  else if(hp>8){tag.textContent='Wounded';tag.className='status-tag';}
+  else if(hp>4){tag.textContent='Gravely Hurt';tag.className='status-tag';}
+  else{tag.textContent='Near Death';tag.className='status-tag';}
+}
+
+function renderInfo(){
+  document.getElementById('room-num').textContent=G.roomNumber||'—';
+  document.getElementById('interacted-count').textContent=G.interacted;
+  document.getElementById('can-run-display').textContent=(G.ranLastRoom||G.interacted>0)?'No':'Yes';
+  document.getElementById('deck-count').textContent=G.deck.length;
+}
+
+function updateButtons(){
+  const inRoom=G.phase==='room';
+  const done=G.interacted>=3;
+  const dealBtn=document.getElementById('btn-deal');
+  dealBtn.disabled=!inRoom||!done;
+  dealBtn.textContent=done?'Next Room':'Awaiting Actions';
+  if(done){
+    dealBtn.style.borderColor='#4a9a4a';
+    dealBtn.style.color='#7dd67d';
+    dealBtn.style.boxShadow='0 0 10px rgba(74,154,74,0.3)';
+  } else {
+    dealBtn.style.borderColor='';
+    dealBtn.style.color='';
+    dealBtn.style.boxShadow='';
+  }
+  document.getElementById('btn-run').disabled=!inRoom||G.ranLastRoom||G.interacted>0;
+}
+
+// ═══════════════════════════════════
+//  HINT
+// ═══════════════════════════════════
+let hintT=null;
+function hint(msg){
+  const b=document.getElementById('hint-bar');
+  b.textContent=msg; b.classList.add('active');
+  clearTimeout(hintT);
+  hintT=setTimeout(()=>{b.textContent='Drag cards to interact';b.classList.remove('active');},3500);
+}
+
+// ═══════════════════════════════════
+//  LOG
+// ═══════════════════════════════════
+function log(msg,type=''){
+  const p=document.getElementById('log');
+  const e=document.createElement('div');
+  e.className=`log-entry ${type}`; e.textContent=msg;
+  p.insertBefore(e,p.firstChild);
+}
+function clearLog(){document.getElementById('log').innerHTML='';}
+
+// ═══════════════════════════════════
+//  OVERLAYS
+// ═══════════════════════════════════
+function hideOverlays(){document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('active'));}
+
+// boot
+renderHp();
+</script>
+</body>
+</html>
