@@ -416,7 +416,7 @@ function startDrag(e,card,source,el){
   if(source.startsWith('room-')){
     const i=+source.split('-')[1];
     if(G.used[i]) return;
-    if(G.interacted>=3){hint('You may only interact with 3 cards per room.');return;}
+    if(G.interacted>=4){hint('You have already acted on all 4 cards this room.');return;}
   }
   e.preventDefault();
   D={active:true,card,source,el};
