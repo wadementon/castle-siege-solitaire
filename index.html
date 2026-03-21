@@ -639,7 +639,7 @@ function afterAct(){
   const remCards=G.room.filter((c,i)=>c&&!G.used[i]);
   const enemiesInRoom=remCards.filter(c=>c.type==='enemy').length;
   const enemiesInDeck=G.deck.filter(c=>c.type==='enemy').length;
-  if(enemiesInRoom===0&&enemiesInDeck===0&&G.interacted>=3){
+  if(enemiesInRoom===0&&enemiesInDeck===0&&G.interacted>=1){
     triggerWin(); return;
   }
   if(G.interacted>=3){
@@ -665,6 +665,10 @@ function startGame(){
 }
 
 function dealRoom(fromFlee=false){
+  // Win check: no enemies anywhere
+  const enemiesInRoom=G.room.filter((c,i)=>c&&!G.used[i]&&c.type==='enemy').length;
+  const enemiesInDeck=G.deck.filter(c=>c.type==='enemy').length;
+  if(enemiesInRoom===0&&enemiesInDeck===0&&G.roomNumber>0){triggerWin();return;}
   if(G.deck.length===0&&G.room.every(c=>c===null)){triggerWin();return;}
   // Block dealing if enemies remain and deck is empty
   const activeEnemies=G.room.filter((c,i)=>c&&!G.used[i]&&c.type==='enemy');
