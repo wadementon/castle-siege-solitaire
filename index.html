@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Castle Siege Solitaire</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
     --stone-darkest: #0a0a0f;
@@ -150,7 +150,7 @@
   @keyframes overlayIn{from{transform:scale(.8);opacity:0;}to{transform:scale(1);opacity:1;}}
   .overlay-title { font-family:'Cinzel Decorative',serif; font-size:1.6rem; color:var(--gold); text-shadow:0 0 20px rgba(201,168,76,.5); margin-bottom:8px; }
   .overlay-title.death{color:var(--blood-light);text-shadow:0 0 20px rgba(192,57,43,.5);}
-  .overlay-msg { font-family:'IM Fell English',serif; font-style:italic; color:var(--parchment-dim); font-size:.9rem; margin-bottom:20px; line-height:1.5; }
+  .overlay-msg { font-family:'Cormorant Garamond',serif; font-style:normal; color:var(--parchment-dim); font-size:.95rem; margin-bottom:20px; line-height:1.6; }
 
   @keyframes damageFlash{0%{background-color:transparent}20%{background-color:rgba(139,26,26,.25)}100%{background-color:transparent}}
   @keyframes healFlash  {0%{background-color:transparent}20%{background-color:rgba(26,139,26,.15)} 100%{background-color:transparent}}
@@ -260,16 +260,32 @@
 
 <!-- Overlays -->
 <div class="overlay active" id="overlay-start">
-  <div class="overlay-box">
+  <div class="overlay-box" style="max-width:640px;max-height:90vh;overflow-y:auto;">
     <div class="overlay-title">Castle Siege Solitaire</div>
-    <div class="overlay-msg">The castle walls await, Hero.<br>Breach every chamber and slay every enemy.<br><br><strong style="color:var(--gold);font-style:normal;">How to play:</strong><br>Drag cards onto targets to act.<br>Enemies → Weapon slot or Discard.<br>Potions → HP bar to drink.<br>Weapons → Weapon slot to equip.<br><br><strong style="color:var(--gold);font-style:normal;">Card Types:</strong><br>
+    <div class="overlay-msg" style="text-align:left;font-size:.8rem;line-height:1.7;">
+      The castle walls await, Hero.<br>Breach every chamber and slay every enemy.<br><br>
+      <strong style="color:var(--gold);font-style:normal;">Card Types:</strong><br>
       <span style="font-style:normal;">
         ♦ = Weapons<br>
         ♥ = Health Potion<br>
         A♦ = Scabbard<br>
         A♥ = Potion Belt<br>
         ♠ / ♣ = Enemies
-      </span></div>
+      </span><br><br>
+      <strong style="color:var(--gold);font-style:normal;">How to Play:</strong><br><br>
+      Goal: Defeat the enemies in the castle using weapons and potions.<br><br>
+      Castle is the remaining cards in the deck.<br><br>
+      Chamber is the current room you are in. There are four cards to a chamber.<br><br>
+      To leave a chamber you must action at least three cards in the chamber. You may action all four.<br><br>
+      You may flee and draw a new chamber if you have not actioned any cards and you did not flee the previous chamber.<br><br>
+      Drag and drop cards to action them.<br><br>
+      An enemy may be defeated barehanded by dropping them in the discard pile. You take damage equal to the card's number value (J/Q/K/A are 11/12/13/14 respectively).<br><br>
+      Alternatively, an enemy may be defeated using an equipped weapon by dropping them onto your equipped weapon. The damage you take is decreased by the number value of your weapon (zero damage if your weapon is greater).<br><br>
+      A weapon can only fight an enemy equal or less in value than the previous enemy it defeated.<br><br>
+      You may only use one potion per chamber. Use a potion by dropping it in the vitality square.<br><br>
+      You may discard potions and weapons without using them.<br><br>
+      Scabbard and Potion Belt each hold only one item.
+    </div>
     <button class="btn btn-primary" onclick="startGame()" style="font-size:.8rem;padding:10px 24px;margin-top:4px;">Enter the Castle</button>
   </div>
 </div>
