@@ -824,8 +824,7 @@ function triggerDeath(){
   if(ds) ds.innerHTML=
     `${G.roomNumber} chamber${G.roomNumber===1?'':'s'} cleared &nbsp;✦&nbsp; `+
     `${G.statsWeaponsUsed} weapon${G.statsWeaponsUsed===1?'':'s'} used &nbsp;✦&nbsp; `+
-    `${G.statsPotionsUsed} potion${G.statsPotionsUsed===1?'':'s'} used &nbsp;✦&nbsp; `+
-    `${Math.max(0,G.hp)} vitality remaining`;
+    `${G.statsPotionsUsed} potion${G.statsPotionsUsed===1?'':'s'} used`;
   document.getElementById('overlay-death').classList.add('active');
   log('You have fallen.','damage');
 }
